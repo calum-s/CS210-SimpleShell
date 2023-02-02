@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include "token.h"
 
 int main(void) {
 
@@ -30,17 +32,44 @@ int main(void) {
         // TODO: Read and parse user input
 
         // Read user input
-        char input[1024];
-        if (fgets(input, 1024, stdin) == NULL) {
+        char* input = malloc(64);
+        size_t input_size = 64;
+        size_t offset = 0;
+
+        while (1) {
+            if (fgets(input + offset, (int) (input_size - offset), stdin) == NULL) {
+                exit(0);
+            }
+
+            offset = strlen(input);
+            if (input[offset - 1] != '\n' && !feof(stdin)) {
+                input_size *= 2;
+                input = realloc(input, input_size);
+            } else {
+                break;
+            }
+        }
+
+        TokenList tokens = tokenize(input);
+        if (tokens.size == 0) {
+            continue;
+        }
+        if (tokens.size == 1 && strncmp(tokens.tokens[0].start, "exit", 4) == 0) {
+            free_token_list(&tokens);
+            free(input);
             exit(0);
         }
 
+        print_token_list(&tokens);
 
         // TODO: While the command is a history invocation or alias then replace it with the
         // appropriate command from history or the aliased command respectively
 
         // TODO: If command is built-in invoke appropriate function
         // TODO: Else execute command as an external process
+        
+        free_token_list(&tokens);
+        free(input);
     }
 
     // TODO: Save history
