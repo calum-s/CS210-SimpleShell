@@ -6,10 +6,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void loadFiles(void) {
-    
-}
-
 int main(void) {
 
     // SHELL EXECUTION SPEC
