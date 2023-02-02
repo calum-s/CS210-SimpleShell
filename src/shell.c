@@ -30,11 +30,22 @@ int main(void) {
     // Set current working directory to home variable
     chdir(home);
 
+    printf("Home: %s \n", home);
+
     // TODO: Save the current path
 
-    // TODO: Load history
+    // TODO: Load history + aliases
 
-    // TODO: Load aliases
+    // creation of buffers for file names
+    char historyFile[100];
+    char aliasesFile[100];
+
+    sprintf(historyFile, "%s/shellconfig/history.txt", home); // concat of home and file name
+    sprintf(aliasesFile, "%s/shellconfig/aliases.txt", home);
+
+    int history = openFile(historyFile);
+    int aliases = openFile(aliasesFile);
+
 
     while (1) {
         // Get current working path
@@ -131,3 +142,36 @@ int main(void) {
 
     return 0;
 }
+
+int openFile(const char* fileName) {
+    FILE* file = fopen(fileName, "r"); // opens the file in read mode
+
+    if (file == NULL) { // check if the file is valid/exists
+        int check;
+        char* dirname = "shellconfig"; // set the directory name for first-time creation
+ 
+        check = mkdir(dirname,0777);
+
+        if (!check) // check if the directory was created
+            printf("Directory created \n");
+        else {
+            FILE* file = fopen(fileName, "a"); // create the file if the directory was created already
+            return 0;
+        }
+
+        printf("Error opening file \n");
+        return 0;
+    }
+
+    // read file contents
+    char line[100];
+    
+    while (fgets(line, sizeof(line), file)) { // read the file line by line and print it (testing)
+        printf("%s", line);
+    }
+
+
+    fclose(file);
+    return 0;
+}
+
