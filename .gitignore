@@ -1,3 +1,5 @@
 .vscode/
 .ds_store
 build/
+.gdb_history
+.idea/
