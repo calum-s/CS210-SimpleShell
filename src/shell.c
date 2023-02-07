@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <stdbool.h>
+#include "builtin.h"
 
 int main(void) {
     // SHELL EXECUTION SPEC
@@ -74,10 +75,12 @@ int main(void) {
             free(input);
             continue;
         }
-        if (tokens.size == 1 && strncmp(tokens.tokens[0].start, "exit", 4) == 0) {
-            free_token_list(&tokens);
-            free(input);
-            exit(0);
+
+        Builtin cmd;
+        if ((cmd = is_builtin(tokens.tokens[0])) != CMD_NONE){
+            execute_builtin(cmd, &tokens);
+        } else {
+            start_external(&tokens);
         }
 
         // TODO: While the command is a history invocation or alias then replace it with the
@@ -85,7 +88,6 @@ int main(void) {
 
         // TODO: If command is built-in invoke appropriate function
 
-        start_external(&tokens);
         free_token_list(&tokens);
         free(input);
     }
