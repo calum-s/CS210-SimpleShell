@@ -50,6 +50,7 @@ void start_external(TokenList* token_list) {
     }
 }
 
+
 void sigint(__attribute_maybe_unused__ int _signum) {
     // Shells are not terminated by Ctrl+C
 }
