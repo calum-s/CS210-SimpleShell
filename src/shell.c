@@ -36,9 +36,13 @@ int main(void) {
     // TODO: Load aliases
 
     while(1) {
-    // TODO: Do while shell has not terminated
-        // TODO: Display prompt
-        printf("> ");
+        char cwd[256];
+        if (getcwd(cwd, sizeof(cwd)) != NULL) {
+            printf("%s > ", cwd);
+        } else {
+            perror("ss: getcwd:");
+            printf("? > ");
+        }
 
         // Read user input
         char* input = malloc(64);

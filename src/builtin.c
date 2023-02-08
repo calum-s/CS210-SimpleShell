@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include "builtin.h"
 #include "token.h"
@@ -16,23 +18,54 @@ const char* BUILTINS[] = {
 Builtin is_builtin(Token token) {
     for(size_t i = 0; i < sizeof(BUILTINS) / sizeof(char*); i++){
         if (strncmp(token.start, BUILTINS[i], token.length) == 0){
-            return i;
+            return (Builtin)i;
         }
     }
     return CMD_NONE;
 }
 
 // Execute built-in command
-void execute_builtin(Builtin builtin, TokenList* token) {
+void execute_builtin(Builtin builtin, TokenList* tokens) {
+    char** args = (char**) malloc((tokens->size + 1) * sizeof(char*));
+    for (size_t i = 0; i < tokens->size; i++) {
+        Token token = tokens->tokens[i];
+
+        args[i] = malloc(token.length + 1);
+        strncpy(args[i], token.start, token.length);
+        args[i][token.length] = '\0';
+    }
+    args[tokens->size] = NULL;
+
     switch (builtin){
         case CMD_EXIT: {
             exit(0);
             break;
         }
 
+        case CMD_CD: {
+            if (tokens->size > 2) {
+                fprintf(stderr, "Error: too many arguments passed\n");
+                break;
+            }
+
+            if (chdir(tokens->size == 2 ? args[1] : getenv("HOME")) < 0) {
+                if (errno == ENOENT) {
+                    fprintf(stderr, "Path '%s' does not exist.\n", tokens->size == 2 ? args[1] : getenv("HOME"));
+                } else {
+                    perror("cd: ");
+                }
+            };
+            break;
+        }
+
         default: {
-            fprintf(stderr,"dumbass");
+            fprintf(stderr,"Builtin command not found\n");
             abort();
         }
     }
+
+    for (size_t i = 0; i < tokens->size; i++) {
+        free(args[i]);
+    }
+    free(args);
 }
