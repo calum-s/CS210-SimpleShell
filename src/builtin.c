@@ -10,8 +10,12 @@
 
 #include "token.h"
 
-// Cmd's have to be listed in the same order found in builtin.h
-const char* BUILTINS[] = {"cd", "exit", "getpath"};
+// Cmd's have to be listed in the same order found in builtin.h  
+const char* BUILTINS[] = {
+    "cd",
+    "exit",
+    "getpath"
+};
 
 // Check if command is built-in
 Builtin is_builtin(Token token) {
