@@ -36,13 +36,18 @@ int main(void) {
     // TODO: Load aliases
 
     while(1) {
+        // Get current working path
         char cwd[256];
-        if (getcwd(cwd, sizeof(cwd)) != NULL) {
-            printf("%s > ", cwd);
-        } else {
+        if (getcwd(cwd, sizeof(cwd)) == NULL) {
             perror("ss: getcwd:");
-            printf("? > ");
+            strncpy(cwd, "?", sizeof(cwd));
         }
+        
+        // Get current user
+        char* usr = getlogin();
+
+        // Print prompt
+        printf("%s $ %s > ", usr, cwd);
 
         // Read user input
         char* input = malloc(64);

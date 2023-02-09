@@ -50,9 +50,9 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
 
             if (chdir(tokens->size == 2 ? args[1] : getenv("HOME")) < 0) {
                 if (errno == ENOENT) {
-                    fprintf(stderr, "Path '%s' does not exist.\n", tokens->size == 2 ? args[1] : getenv("HOME"));
+                    fprintf(stderr, "cd: Path '%s' does not exist.\n", tokens->size == 2 ? args[1] : getenv("HOME"));
                 } else {
-                    perror("cd: ");
+                    perror("cd");
                 }
             };
             break;
