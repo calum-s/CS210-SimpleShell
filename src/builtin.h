@@ -4,7 +4,9 @@
 enum Builtin {
     CMD_CD,
     CMD_EXIT,
+    CMD_GETPATH,
     CMD_NONE
+
 };
 typedef enum Builtin Builtin;
 

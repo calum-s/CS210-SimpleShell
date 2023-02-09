@@ -9,9 +9,11 @@
 #include "builtin.h"
 #include "token.h"
 
+// Cmd's have to be listed in the same order found in builtin.h  
 const char* BUILTINS[] = {
     "cd",
-    "exit"
+    "exit",
+    "getpath"
 };
 
 // Check if command is built-in
@@ -55,9 +57,12 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
                     perror("cd");
                 }
             };
+        }
+        case CMD_GETPATH: {
+            char* path = getenv("PATH");
+            printf("%s\n", path);
             break;
         }
-
         default: {
             fprintf(stderr,"Builtin command not found\n");
             abort();
