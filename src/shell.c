@@ -38,14 +38,12 @@ int main(void) {
     // TODO: Load history + aliases
 
     // creation of buffers for file names
-    char historyFile[100] = "/shellconfig/history.txt";
-    char aliasesFile[100] = "/shellconfig/aliases.txt";
-
-    int history = openFile(strcat(home,historyFile));
-    int aliases = openFile(strcat(home,aliasesFile));
-
-    printf("%c \n", history);
-    printf("%c \n", aliases);
+    char historyFile[100];
+    char aliasesFile[100];
+    snprintf(historyFile, 100, "%s%s", home ,"/.config/history.txt");
+    snprintf(aliasesFile, 100, "%s%s", home ,"/.config/aliases.txt");
+    int history = openFile(historyFile);
+    int aliases = openFile(aliasesFile);
 
 
     while (1) {
