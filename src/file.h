@@ -4,7 +4,7 @@
 
 #define MAX_COMMAND_NAME_LENGTH 100
 
-typedef struct Command{
+typedef struct Command {
     // struct Command *next;
     char commandName[MAX_COMMAND_NAME_LENGTH];
     int commandNumber;

@@ -1,21 +1,25 @@
-#include <unistd.h>
-#include <stdlib.h>
+#include "file.h"
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "file.h"
+#include <unistd.h>
 
-//TODO: Detect command history and store in struct in incremements of 1.
+// TODO: Detect command history and store in struct in incremements of 1.
 
-// Commands are accessed in the format of the command !<number> where <number> is the command number in the history.
-// If the command number is not found, the shell should print an error message and return to the prompt.
-// for reading from the file the program should iterate over the elements in the struct, and return the string values (command itself)
-// struct format is as follows: {int commandNumber, char* command}
+// Commands are accessed in the format of the command !<number> where <number>
+// is the command number in the history. If the command number is not found, the
+// shell should print an error message and return to the prompt. for reading
+// from the file the program should iterate over the elements in the struct, and
+// return the string values (command itself) struct format is as follows: {int
+// commandNumber, char* command}
 
 command readFromFile(FILE* file) {
     command allCommands;
-    int numFieldsRead = fscanf(file, "%d %[^\n]", &allCommands.commandNumber, allCommands.commandName);
+    int numFieldsRead = fscanf(file, "%d %[^\n]", &allCommands.commandNumber,
+                               allCommands.commandName);
 
     if (numFieldsRead != 2) {
         allCommands.commandNumber = 0;
@@ -27,17 +31,20 @@ command readFromFile(FILE* file) {
 void openFile(const char* fileName) {
     FILE* file = fopen(fileName, "r");
 
-    if (file == NULL) { // check if the file is valid/exists
+    if (file == NULL) {  // check if the file is valid/exists
         int check;
-        char* dirname = "shellconfig"; // set the directory name for first-time creation
- 
-        check = mkdir(dirname,0777);
+        char* dirname =
+            "shellconfig";  // set the directory name for first-time creation
 
-        if (!check) { // check if the directory was created
+        check = mkdir(dirname, 0777);
+
+        if (!check) {  // check if the directory was created
             printf("Directory created \n");
             return;
         } else {
-            FILE* file = fopen(fileName, "a"); // create the file if the directory was created already
+            FILE* file = fopen(
+                fileName,
+                "a");  // create the file if the directory was created already
             fclose(file);
             return;
         }
@@ -51,7 +58,6 @@ void openFile(const char* fileName) {
 
     fclose(file);
 }
-
 
 void writeToFile(const char* fileName, const char* commandName) {
     FILE* infile = fopen(fileName, "r");

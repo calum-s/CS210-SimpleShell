@@ -11,8 +11,8 @@
 #include <unistd.h>
 
 #include "builtin.h"
-#include "file.h"
 #include "command.h"
+#include "file.h"
 #include "token.h"
 
 int main(void) {
@@ -39,11 +39,10 @@ int main(void) {
 
     char historyFile[100];
     char aliasesFile[100];
-    snprintf(historyFile, 100, "%s%s", home ,"/shellconfig/history.txt");
-    snprintf(aliasesFile, 100, "%s%s", home ,"/shellconfig/aliases.txt");
+    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/history.txt");
+    snprintf(aliasesFile, 100, "%s%s", home, "/shellconfig/aliases.txt");
     openFile(historyFile);
     openFile(aliasesFile);
-
 
     while (1) {
         // Get current working path
