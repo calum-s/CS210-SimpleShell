@@ -1,9 +1,10 @@
-#include <unistd.h>
+#include "command.h"
+
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <errno.h>
-#include "command.h"
+#include <unistd.h>
 
 void start_external(TokenList* token_list) {
     pid_t pid = fork();
@@ -13,7 +14,8 @@ void start_external(TokenList* token_list) {
     }
 
     if (pid == 0) {
-        // exec wants a list of null terminated strings, so we need to re-allocate
+        // exec wants a list of null terminated strings, so we need to
+        // re-allocate
         char** args = (char**) malloc((token_list->size + 1) * sizeof(char*));
         for (size_t i = 0; i < token_list->size; i++) {
             Token token = token_list->tokens[i];
@@ -49,7 +51,6 @@ void start_external(TokenList* token_list) {
         }
     }
 }
-
 
 void sigint(__attribute__((unused)) int _signum) {
     // Shells are not terminated by Ctrl+C

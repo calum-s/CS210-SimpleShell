@@ -11,7 +11,7 @@ struct Token {
 typedef struct Token Token;
 
 struct TokenList {
-    Token *tokens;
+    Token* tokens;
     size_t size;
     size_t capacity;
 };

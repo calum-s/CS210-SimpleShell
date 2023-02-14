@@ -2,23 +2,24 @@
 // Authors: Kyle Pereria, Calum Scott, Karim Moukaouame, Max Hagan, Peter King
 // Date: 31/01/2023
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include "token.h"
-#include "command.h"
-#include <signal.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "builtin.h"
+#include "command.h"
+#include "token.h"
 
 int main(void) {
     // SHELL EXECUTION SPEC
 
     struct sigaction act = {
-            .sa_handler = sigint,
-            .sa_flags = 0,
+        .sa_handler = sigint,
+        .sa_flags = 0,
     };
     sigemptyset(&act.sa_mask);
     sigaction(SIGINT, &act, NULL);
@@ -35,14 +36,14 @@ int main(void) {
 
     // TODO: Load aliases
 
-    while(1) {
+    while (1) {
         // Get current working path
         char cwd[256];
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
             perror("ss: getcwd:");
             strncpy(cwd, "?", sizeof(cwd));
         }
-        
+
         // Get current user
         char* usr = getlogin();
 
@@ -56,9 +57,11 @@ int main(void) {
         bool force_continue = false;
 
         while (1) {
-            if (fgets(input + offset, (int) (input_size - offset), stdin) == NULL) {
+            if (fgets(input + offset, (int) (input_size - offset), stdin) ==
+                NULL) {
                 if (!feof(stdin)) {
-                    // Happens on SIGINT which should cause line to be discarded.
+                    // Happens on SIGINT which should cause line to be
+                    // discarded.
                     printf("\n");
                     free(input);
                     force_continue = true;
@@ -86,14 +89,15 @@ int main(void) {
         }
 
         Builtin cmd;
-        if ((cmd = is_builtin(tokens.tokens[0])) != CMD_NONE){
+        if ((cmd = is_builtin(tokens.tokens[0])) != CMD_NONE) {
             execute_builtin(cmd, &tokens);
         } else {
             start_external(&tokens);
         }
 
-        // TODO: While the command is a history invocation or alias then replace it with the
-        // appropriate command from history or the aliased command respectively
+        // TODO: While the command is a history invocation or alias then replace
+        // it with the appropriate command from history or the aliased command
+        // respectively
 
         // TODO: If command is built-in invoke appropriate function
 
