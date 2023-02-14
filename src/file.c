@@ -13,7 +13,7 @@
 // for reading from the file the program should iterate over the elements in the struct, and return the string values (command itself)
 // struct format is as follows: {int commandNumber, char* command}
 
-int openFile(const char* fileName) {
+void openFile(const char* fileName) {
     FILE* file = fopen(fileName, "r"); // opens the file in read mode
     struct Command commands;
 
@@ -28,27 +28,40 @@ int openFile(const char* fileName) {
         else {
             FILE* file = fopen(fileName, "a"); // create the file if the directory was created already
             fclose(file);
-            return 0;
+            return;
         }
 
-        return 0;
+        return;
     }
-    
-    while (fread (&commands, sizeof(struct Command), 1, file)) {
-        printf ("Number = %10c, Name = %10s \n", commands.commandNumber, commands.commandName);
-    }
+
+    int result;
+    command *new = malloc(sizeof(commands));
+    result = fread(new, sizeof(*new), 1, file);
+
+        if (1 != result) {
+            if (feof(file)) {
+                return;
+            }
+            perror("Could not read from file");
+            return;
+        }
+
+        printf("Read struct num %d from file.\n", new->commandNumber);
+        // printf("Name: %s\n", new->commandName);
 
     fclose(file);
-    return 0;
+    return;
 }
 
-void addToFile(char fileName, char* token) {
+void addToFile(const char* fileName, char* token) {
     FILE* outfile = fopen(fileName, "a");
-    struct Command allCommands = {&token, allCommands.commandNumber + 1};
+    command allCommands = {token, allCommands.commandNumber + 1};
      
     // write struct to file
-    printf("%p %p \n", outfile, &allCommands);
-    fwrite (&allCommands, sizeof(struct Command), 1, outfile);
+    fwrite (&allCommands, sizeof(command), 1, outfile);
 
-    printf("%s \n", token);
+    fclose(outfile);
+
+    printf("wrote to file \n");
+
 }

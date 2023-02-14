@@ -2,10 +2,11 @@
 
 #include "token.h"
 
-struct Command {
+typedef struct Command {
+    // struct Command *next;
     char* commandName;
     int commandNumber;
-};
+} command;
 
-int openFile(const char* fileName);
-void addToFile(char fileName, char* token);
+void openFile(const char* fileName);
+void addToFile(const char* fileName, char* token);

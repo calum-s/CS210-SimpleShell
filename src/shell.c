@@ -31,19 +31,18 @@ int main(void) {
     // Set current working directory to home variable
     chdir(home);
 
-    printf("Home: %s \n", home);
-
     // TODO: Save the current path
 
     // TODO: Load history + aliases
 
     // creation of buffers for file names
+
     char historyFile[100];
     char aliasesFile[100];
-    snprintf(historyFile, 100, "%s%s", home ,"/.config/history.txt");
-    snprintf(aliasesFile, 100, "%s%s", home ,"/.config/aliases.txt");
-    int history = openFile(historyFile);
-    int aliases = openFile(aliasesFile);
+    snprintf(historyFile, 100, "%s%s", home ,"/shellconfig/history.txt");
+    snprintf(aliasesFile, 100, "%s%s", home ,"/shellconfig/aliases.txt");
+    openFile(historyFile);
+    openFile(aliasesFile);
 
 
     while (1) {
