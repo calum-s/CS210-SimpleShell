@@ -119,7 +119,7 @@ int main(void) {
         Builtin cmd;
 
         if ((cmd = is_builtin(tokens.tokens[0])) != CMD_NONE) {
-            addToFile(historyFile, tokens.tokens[0].start);
+            writeToFile(historyFile, tokens.tokens[0].start);
             execute_builtin(cmd, &tokens);
         } else {
             start_external(&tokens);

@@ -2,11 +2,14 @@
 
 #include "token.h"
 
-typedef struct Command {
+#define MAX_COMMAND_NAME_LENGTH 100
+
+typedef struct Command{
     // struct Command *next;
-    char* commandName;
+    char commandName[MAX_COMMAND_NAME_LENGTH];
     int commandNumber;
 } command;
 
 void openFile(const char* fileName);
-void addToFile(const char* fileName, char* token);
+void writeToFile(const char* fileName, const char* commandName);
+command readFromFile(FILE* fileName);
