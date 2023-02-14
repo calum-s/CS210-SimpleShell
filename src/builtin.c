@@ -1,26 +1,23 @@
 // For built-in commands
 
-#include <string.h>
+#include "builtin.h"
+
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
-#include <errno.h>
 
-#include "builtin.h"
 #include "token.h"
 
-// Cmd's have to be listed in the same order found in builtin.h  
-const char* BUILTINS[] = {
-    "cd",
-    "exit",
-    "getpath"
-};
+// Cmd's have to be listed in the same order found in builtin.h
+const char* BUILTINS[] = {"cd", "exit", "getpath"};
 
 // Check if command is built-in
 Builtin is_builtin(Token token) {
-    for(size_t i = 0; i < sizeof(BUILTINS) / sizeof(char*); i++){
-        if (strncmp(token.start, BUILTINS[i], token.length) == 0){
-            return (Builtin)i;
+    for (size_t i = 0; i < sizeof(BUILTINS) / sizeof(char*); i++) {
+        if (strncmp(token.start, BUILTINS[i], token.length) == 0) {
+            return (Builtin) i;
         }
     }
     return CMD_NONE;
@@ -38,7 +35,7 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
     }
     args[tokens->size] = NULL;
 
-    switch (builtin){
+    switch (builtin) {
         case CMD_EXIT: {
             exit(0);
             break;
@@ -52,7 +49,8 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
 
             if (chdir(tokens->size == 2 ? args[1] : getenv("HOME")) < 0) {
                 if (errno == ENOENT) {
-                    fprintf(stderr, "cd: Path '%s' does not exist.\n", tokens->size == 2 ? args[1] : getenv("HOME"));
+                    fprintf(stderr, "cd: Path '%s' does not exist.\n",
+                            tokens->size == 2 ? args[1] : getenv("HOME"));
                 } else {
                     perror("cd");
                 }
@@ -64,7 +62,7 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
             break;
         }
         default: {
-            fprintf(stderr,"Builtin command not found\n");
+            fprintf(stderr, "Builtin command not found\n");
             abort();
         }
     }

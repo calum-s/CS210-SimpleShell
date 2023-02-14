@@ -1,7 +1,8 @@
-#include <stdio.h>
 #include <assert.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "token.h"
 
 void test_tokenizer(void);

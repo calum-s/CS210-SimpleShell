@@ -1,7 +1,8 @@
-#include <stdlib.h>
+#include "token.h"
+
 #include <stdbool.h>
 #include <stdio.h>
-#include "token.h"
+#include <stdlib.h>
 
 bool is_delimeter(char c) {
     const char* delimeters = " \t\n;|&><";
@@ -50,7 +51,7 @@ TokenList make_token_list(void) {
     return list;
 }
 
-void add_token(TokenList *list, Token token) {
+void add_token(TokenList* list, Token token) {
     if (list->size == list->capacity) {
         list->capacity = list->capacity == 0 ? 32 : list->capacity * 2;
         list->tokens = realloc(list->tokens, list->capacity * sizeof(Token));
@@ -58,7 +59,7 @@ void add_token(TokenList *list, Token token) {
     list->tokens[list->size++] = token;
 }
 
-void remove_token(TokenList *list, size_t index) {
+void remove_token(TokenList* list, size_t index) {
     if (index >= list->size) {
         return;
     }
@@ -68,15 +69,12 @@ void remove_token(TokenList *list, size_t index) {
     list->size--;
 }
 
-void free_token_list(TokenList *list) {
-    free(list->tokens);
-}
+void free_token_list(TokenList* list) { free(list->tokens); }
 
-void print_token_list(TokenList *list) {
+void print_token_list(TokenList* list) {
     printf("[");
     for (size_t i = 0; i < list->size; i++) {
         printf("'%.*s',", (int) list->tokens[i].length, list->tokens[i].start);
     }
     printf("]\n");
 }
-
