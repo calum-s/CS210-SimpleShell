@@ -8,9 +8,7 @@ bool is_delimeter(char c) {
     const char* delimeters = " \t\n;|&><";
     const char* i = delimeters;
     while (*i != '\0') {
-        if (*i == c) {
-            return true;
-        }
+        if (*i == c) { return true; }
         ++i;
     }
     return false;
@@ -26,7 +24,7 @@ TokenList tokenize(char* source) {
             if (current != start) {
                 Token token;
                 token.start = start;
-                token.length = (size_t) (current - start);
+                token.length = (size_t)(current - start);
                 add_token(&list, token);
             }
             start = current + 1;
@@ -37,7 +35,7 @@ TokenList tokenize(char* source) {
     if (current != start) {
         Token token;
         token.start = start;
-        token.length = (size_t) (current - start);
+        token.length = (size_t)(current - start);
         add_token(&list, token);
     }
     return list;
@@ -60,9 +58,7 @@ void add_token(TokenList* list, Token token) {
 }
 
 void remove_token(TokenList* list, size_t index) {
-    if (index >= list->size) {
-        return;
-    }
+    if (index >= list->size) { return; }
     for (size_t i = index; i < list->size - 1; i++) {
         list->tokens[i] = list->tokens[i + 1];
     }
