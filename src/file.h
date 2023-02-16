@@ -1,6 +1,7 @@
 #pragma once
 
 #include "token.h"
+#include <stdio.h>
 
 #define MAX_COMMAND_NAME_LENGTH 100
 
