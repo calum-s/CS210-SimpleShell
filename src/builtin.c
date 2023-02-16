@@ -11,7 +11,7 @@
 #include "token.h"
 
 // Cmd's have to be listed in the same order found in builtin.h
-const char* BUILTINS[] = {"cd", "exit", "getpath"};
+const char* BUILTINS[] = {"cd", "exit", "getpath", "setpath"};
 
 // Check if command is built-in
 Builtin is_builtin(Token token) {
@@ -55,10 +55,21 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
                     perror("cd");
                 }
             };
+            break;
         }
         case CMD_GETPATH: {
             char* path = getenv("PATH");
             printf("%s\n", path);
+            break;
+        }
+        case CMD_SETPATH: {
+            if (tokens->size > 2) {
+                fprintf(stderr, "Error: too many arguments passed\n");
+                break;
+            }
+            if (tokens->size == 2) {
+                if (setenv("PATH", args[1], 1) < 0) { perror("setpath"); };
+            }
             break;
         }
         default: {
@@ -67,8 +78,6 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
         }
     }
 
-    for (size_t i = 0; i < tokens->size; i++) {
-        free(args[i]);
-    }
+    for (size_t i = 0; i < tokens->size; i++) { free(args[i]); }
     free(args);
 }
