@@ -5,6 +5,7 @@ enum Builtin {
     CMD_CD,
     CMD_EXIT,
     CMD_GETPATH,
+    CMD_SETPATH,
     CMD_NONE
 
 };

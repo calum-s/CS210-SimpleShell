@@ -14,7 +14,8 @@
 const char* BUILTINS[] = {
     "cd",
     "exit",
-    "getpath"
+    "getpath",
+    "setpath"
 };
 
 // Check if command is built-in
@@ -59,10 +60,23 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
                     perror("cd");
                 }
             };
+            break;
         }
         case CMD_GETPATH: {
             char* path = getenv("PATH");
             printf("%s\n", path);
+            break;
+        }
+        case CMD_SETPATH: {
+            if (tokens->size > 2) {
+                fprintf(stderr, "Error: too many arguments passed\n");
+                break;
+            }
+            if (tokens->size == 2) {
+                if (setenv("PATH", args[1], 1) < 0) {
+                    perror("setpath");
+                };
+            }
             break;
         }
         default: {
