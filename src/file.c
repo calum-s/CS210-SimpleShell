@@ -16,12 +16,11 @@
 // return the string values (command itself) struct format is as follows: {int
 // commandNumber, char* command}
 
-command readFromFile(FILE* file) {
-    command allCommands;
-    int numFieldsRead = fscanf(file, "%d %[^\n]", &allCommands.commandNumber,
-                               allCommands.commandName);
+Command readFromFile(FILE* file) {
+    Command allCommands;
 
-    if (numFieldsRead != 2) {
+    if (fscanf(file, "%d %[^\n]", &allCommands.commandNumber,
+               allCommands.commandName) != 2) {
         allCommands.commandNumber = 0;
     }
 
@@ -32,13 +31,10 @@ void openFile(const char* fileName) {
     FILE* file = fopen(fileName, "r");
 
     if (file == NULL) {  // check if the file is valid/exists
-        int check;
         char* dirname =
             "shellconfig";  // set the directory name for first-time creation
 
-        check = mkdir(dirname, 0777);
-
-        if (!check) {  // check if the directory was created
+        if (!mkdir(dirname, 0775)) {  // check if the directory was created
             printf("Directory created \n");
             return;
         } else {
@@ -50,7 +46,7 @@ void openFile(const char* fileName) {
         }
     }
 
-    command allCommands;
+    Command allCommands;
     while ((allCommands = readFromFile(file)).commandNumber != 0) {
         printf("Read struct num %d from file.\n", allCommands.commandNumber);
         printf("Name: %s\n", allCommands.commandName);
@@ -65,7 +61,7 @@ void writeToFile(const char* fileName, const char* commandName) {
 
     if (infile != NULL) {
         // Read the last command number from the file
-        command lastCommand = readFromFile(infile);
+        Command lastCommand = readFromFile(infile);
         while (lastCommand.commandNumber != 0) {
             commandNumber = lastCommand.commandNumber + 1;
             lastCommand = readFromFile(infile);
@@ -75,7 +71,14 @@ void writeToFile(const char* fileName, const char* commandName) {
 
     FILE* outfile = fopen(fileName, "a");
     if (outfile == NULL) {
-        printf("Error opening file.\n");
+        printf("Error opening file\n");
+        return;
+    }
+
+    if (commandNumber > 10) {
+        printf(
+            "Error: Commands file at capacity, cannot add to file (do "
+            "something with this?) \n");
         return;
     }
 

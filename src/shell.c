@@ -114,11 +114,13 @@ int main(void) {
             continue;
         }
 
-        // printf("Tokens: %s \n", tokens.tokens[0].start);
         Builtin cmd;
+        writeToFile(
+            historyFile,
+            tokens.tokens[0].start);  // here so that it remembers the command
+                                      // even if it is not builtin / valid
 
         if ((cmd = is_builtin(tokens.tokens[0])) != CMD_NONE) {
-            writeToFile(historyFile, tokens.tokens[0].start);
             execute_builtin(cmd, &tokens);
         } else {
             start_external(&tokens);
