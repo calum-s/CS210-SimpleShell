@@ -70,11 +70,9 @@ int main(void) {
                     // Happens on SIGINT which should cause line to be
                     // discarded.
                     printf("\n");
-                    free(input);
                     force_continue = true;
                     break;
                 }
-                free(input);
                 exit(0);
             }
 
@@ -92,7 +90,6 @@ int main(void) {
                         }
                     }
 
-                    free(input);
                     force_continue = true;
                     break;
                 }
@@ -104,8 +101,10 @@ int main(void) {
             }
         }
 
-        if (force_continue)
+        if (force_continue) {
+            free(input);
             continue;
+        }
 
         TokenList tokens = tokenize(input);
         if (tokens.size == 0) {
@@ -114,14 +113,10 @@ int main(void) {
             continue;
         }
 
-        Builtin cmd;
         write_to_file(historyFile,
                       tokens.tokens[0].start); // here so that it remembers the command
                                                // even if it is not builtin / valid
-
-        if ((cmd = is_builtin(tokens.tokens[0])) != CMD_NONE) {
-            execute_builtin(cmd, &tokens);
-        } else {
+        if (!try_execute_builtin(&tokens)) {
             start_external(&tokens);
         }
 

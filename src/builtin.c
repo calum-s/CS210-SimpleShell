@@ -10,77 +10,71 @@
 
 #include "token.h"
 
-// Cmd's have to be listed in the same order found in builtin.h
-const char* BUILTINS[] = {"cd", "exit", "getpath", "setpath"};
+bool try_execute_builtin(TokenList* tokens) {
+    for (size_t i = 0; i < sizeof(BUILTIN_TABLE) / sizeof(BUILTIN_TABLE[0]); i++) {
+        if (strncmp(BUILTIN_TABLE[i].name, tokens->tokens[0].start, tokens->tokens[0].length) == 0) {
+            // Is a builtin
 
-// Check if command is built-in
-Builtin is_builtin(Token token) {
-    for (size_t i = 0; i < sizeof(BUILTINS) / sizeof(char*); i++) {
-        if (token.length == strlen(BUILTINS[i]) && strncmp(token.start, BUILTINS[i], token.length) == 0) {
-            return (Builtin) i;
+            if (tokens->size > BUILTIN_TABLE[i].max_args || tokens->size < BUILTIN_TABLE[i].min_args) {
+                bool word = tokens->size > BUILTIN_TABLE[i].max_args;
+                fprintf(stderr,
+                        "%s: Too %s arguments. Expected at %s %zu.\n",
+                        BUILTIN_TABLE[i].name,
+                        word ? "many" : "few",
+                        word ? "most" : "least",
+                        word ? BUILTIN_TABLE[i].max_args - 1 : BUILTIN_TABLE[i].min_args - 1);
+                return true;
+            }
+
+            // Convert the args to the array of null terminated char*s. We do
+            // this so that the args can be used easily with syscalls.
+            char** args = (char**) malloc((tokens->size + 1) * sizeof(char*));
+            for (size_t j = 0; j < tokens->size; j++) {
+                Token token = tokens->tokens[j];
+
+                args[j] = malloc(token.length + 1);
+                strncpy(args[j], token.start, token.length);
+                args[j][token.length] = '\0';
+            }
+            args[tokens->size] = NULL;
+
+            BUILTIN_TABLE[i].call((int) tokens->size, args);
+
+            for (size_t j = 0; j < tokens->size; j++) {
+                free(args[j]);
+            }
+            free(args);
+            return true;
         }
     }
-    return CMD_NONE;
+    return false;
+}
+// Try to execute builtin, returning false if no such builtin was found.
+void builtin_cd(int argc, char** argv) {
+    if (chdir(argc == 2 ? argv[1] : getenv("HOME")) < 0) {
+        if (errno == ENOENT) {
+            fprintf(stderr, "cd: Path '%s' does not exist.\n", argc == 2 ? argv[1] : getenv("HOME"));
+        } else {
+            perror("cd");
+        }
+    };
 }
 
-// Execute built-in command
-void execute_builtin(Builtin builtin, TokenList* tokens) {
-    char** args = (char**) malloc((tokens->size + 1) * sizeof(char*));
-    for (size_t i = 0; i < tokens->size; i++) {
-        Token token = tokens->tokens[i];
+void builtin_getpath(int argc, char** argv) {
+    (void) argc, (void) argv;
+    char* path = getenv("PATH");
+    printf("%s\n", path);
+}
 
-        args[i] = malloc(token.length + 1);
-        strncpy(args[i], token.start, token.length);
-        args[i][token.length] = '\0';
+void builtin_setpath(int argc, char** argv) {
+    malloc(1023);
+    (void) argc;
+    if (setenv("PATH", argv[1], 1) < 0) {
+        perror("setpath");
     }
-    args[tokens->size] = NULL;
+}
 
-    switch (builtin) {
-    case CMD_EXIT: {
-        exit(0);
-        break;
-    }
-
-    case CMD_CD: {
-        if (tokens->size > 2) {
-            fprintf(stderr, "Error: too many arguments passed\n");
-            break;
-        }
-
-        if (chdir(tokens->size == 2 ? args[1] : getenv("HOME")) < 0) {
-            if (errno == ENOENT) {
-                fprintf(stderr, "cd: Path '%s' does not exist.\n", tokens->size == 2 ? args[1] : getenv("HOME"));
-            } else {
-                perror("cd");
-            }
-        };
-        break;
-    }
-    case CMD_GETPATH: {
-        char* path = getenv("PATH");
-        printf("%s\n", path);
-        break;
-    }
-    case CMD_SETPATH: {
-        if (tokens->size > 2) {
-            fprintf(stderr, "Error: too many arguments passed\n");
-            break;
-        }
-        if (tokens->size == 2) {
-            if (setenv("PATH", args[1], 1) < 0) {
-                perror("setpath");
-            };
-        }
-        break;
-    }
-    default: {
-        fprintf(stderr, "Builtin command not found\n");
-        abort();
-    }
-    }
-
-    for (size_t i = 0; i < tokens->size; i++) {
-        free(args[i]);
-    }
-    free(args);
+void builtin_exit(int argc, char** argv) {
+    (void) argc, (void) argv;
+    exit(0);
 }
