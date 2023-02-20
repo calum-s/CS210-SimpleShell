@@ -36,48 +36,51 @@ void execute_builtin(Builtin builtin, TokenList* tokens) {
     args[tokens->size] = NULL;
 
     switch (builtin) {
-        case CMD_EXIT: {
-            exit(0);
-            break;
-        }
-
-        case CMD_CD: {
-            if (tokens->size > 2) {
-                fprintf(stderr, "Error: too many arguments passed\n");
-                break;
-            }
-
-            if (chdir(tokens->size == 2 ? args[1] : getenv("HOME")) < 0) {
-                if (errno == ENOENT) {
-                    fprintf(stderr, "cd: Path '%s' does not exist.\n",
-                            tokens->size == 2 ? args[1] : getenv("HOME"));
-                } else {
-                    perror("cd");
-                }
-            };
-            break;
-        }
-        case CMD_GETPATH: {
-            char* path = getenv("PATH");
-            printf("%s\n", path);
-            break;
-        }
-        case CMD_SETPATH: {
-            if (tokens->size > 2) {
-                fprintf(stderr, "Error: too many arguments passed\n");
-                break;
-            }
-            if (tokens->size == 2) {
-                if (setenv("PATH", args[1], 1) < 0) { perror("setpath"); };
-            }
-            break;
-        }
-        default: {
-            fprintf(stderr, "Builtin command not found\n");
-            abort();
-        }
+    case CMD_EXIT: {
+        exit(0);
+        break;
     }
 
-    for (size_t i = 0; i < tokens->size; i++) { free(args[i]); }
+    case CMD_CD: {
+        if (tokens->size > 2) {
+            fprintf(stderr, "Error: too many arguments passed\n");
+            break;
+        }
+
+        if (chdir(tokens->size == 2 ? args[1] : getenv("HOME")) < 0) {
+            if (errno == ENOENT) {
+                fprintf(stderr, "cd: Path '%s' does not exist.\n", tokens->size == 2 ? args[1] : getenv("HOME"));
+            } else {
+                perror("cd");
+            }
+        };
+        break;
+    }
+    case CMD_GETPATH: {
+        char* path = getenv("PATH");
+        printf("%s\n", path);
+        break;
+    }
+    case CMD_SETPATH: {
+        if (tokens->size > 2) {
+            fprintf(stderr, "Error: too many arguments passed\n");
+            break;
+        }
+        if (tokens->size == 2) {
+            if (setenv("PATH", args[1], 1) < 0) {
+                perror("setpath");
+            };
+        }
+        break;
+    }
+    default: {
+        fprintf(stderr, "Builtin command not found\n");
+        abort();
+    }
+    }
+
+    for (size_t i = 0; i < tokens->size; i++) {
+        free(args[i]);
+    }
     free(args);
 }
