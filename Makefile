@@ -3,7 +3,7 @@ sources:= src/token.c src/command.c src/builtin.c
 
 all:
 	mkdir -p build
-	clang -g -Wall -Wextra -Wconversion -fsanitize=address,undefined src/shell.c $(sources) -o build/shell
+	clang -g -Wall -Wextra -Wconversion -DCONFORMANT -fsanitize=address,undefined src/shell.c $(sources) -o build/shell
 
 clean:
 	rm -rf build
@@ -19,3 +19,7 @@ run:
 unsafe:
 	mkdir -p build
 	clang -g -Wall -Wextra -Wconversion ./src/shell.c -o build/shell
+
+demo:
+	mkdir -p build
+	clang -g -Wall -Wextra -Wconversion -fsanitize=address,undefined src/shell.c $(sources) -o build/shell
