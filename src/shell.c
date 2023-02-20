@@ -115,10 +115,9 @@ int main(void) {
         }
 
         Builtin cmd;
-        write_to_file(
-            historyFile,
-            tokens.tokens[0].start);  // here so that it remembers the command
-                                      // even if it is not builtin / valid
+        write_to_file(historyFile,
+                      tokens.tokens[0].start); // here so that it remembers the command
+                                               // even if it is not builtin / valid
 
         if ((cmd = is_builtin(tokens.tokens[0])) != CMD_NONE) {
             execute_builtin(cmd, &tokens);
