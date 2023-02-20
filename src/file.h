@@ -4,7 +4,7 @@
 
 #include "token.h"
 
-#define MAX_COMMAND_NAME_LENGTH 100
+#define MAX_COMMAND_NAME_LENGTH 512
 
 struct Command {
     char commandName[MAX_COMMAND_NAME_LENGTH];
@@ -13,6 +13,6 @@ struct Command {
 
 typedef struct Command Command;
 
-void openFile(const char* fileName);
-void writeToFile(const char* fileName, const char* commandName);
-Command readFromFile(FILE* fileName);
+void open_file(const char* fileName);
+void write_to_file(const char* fileName, const char* commandName);
+Command read_from_file(FILE* fileName);

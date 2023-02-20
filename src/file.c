@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 
 // TODO: Detect command history and store in struct in incremements of 1.
 
@@ -16,38 +17,35 @@
 // return the string values (command itself) struct format is as follows: {int
 // commandNumber, char* command}
 
-Command readFromFile(FILE* file) {
-    Command allCommands;
-
-    if (fscanf(file, "%d %[^\n]", &allCommands.commandNumber,
-               allCommands.commandName) != 2) {
-        allCommands.commandNumber = 0;
+Command read_from_file(FILE* file) {
+    Command command;
+    if (fscanf(file, "%d %[^\n]", &command.commandNumber,
+               command.commandName) == 2) {
+        return command;
+    } else {
+        command.commandNumber = 0;
+        return command;
     }
 
-    return allCommands;
 }
 
-void openFile(const char* fileName) {
+void open_file(const char* fileName) {
     FILE* file = fopen(fileName, "r");
 
     if (file == NULL) {  // check if the file is valid/exists
         char* dirname =
             "shellconfig";  // set the directory name for first-time creation
 
-        if (!mkdir(dirname, 0775)) {  // check if the directory was created
-            printf("Directory created \n");
+        if (mkdir(dirname, 0775) < 0 && errno != EEXIST) {  // check if the directory was created
+            perror("mkdir");
             return;
-        } else {
-            FILE* file = fopen(
-                fileName,
-                "a");  // create the file if the directory was created already
-            fclose(file);
-            return;
-        }
+        } 
+        file = fopen(fileName, "a");
     }
 
     Command allCommands;
-    while ((allCommands = readFromFile(file)).commandNumber != 0) {
+
+    while ((allCommands = read_from_file(file)).commandNumber != 0) {
         printf("Read struct num %d from file.\n", allCommands.commandNumber);
         printf("Name: %s\n", allCommands.commandName);
     }
@@ -55,35 +53,33 @@ void openFile(const char* fileName) {
     fclose(file);
 }
 
-void writeToFile(const char* fileName, const char* commandName) {
-    FILE* infile = fopen(fileName, "r");
-    int commandNumber = 1;
+void write_to_file(const char* fileName, const char* commandName) {
+    FILE* infile = fopen(fileName, "r+");
 
-    if (infile != NULL) {
-        // Read the last command number from the file
-        Command lastCommand = readFromFile(infile);
-        while (lastCommand.commandNumber != 0) {
-            commandNumber = lastCommand.commandNumber + 1;
-            lastCommand = readFromFile(infile);
-        }
-        fclose(infile);
-    }
-
-    FILE* outfile = fopen(fileName, "a");
-    if (outfile == NULL) {
+    if (infile == NULL) {
         printf("Error opening file\n");
         return;
     }
 
-    if (commandNumber > 10) {
+    int commandNumber = 1;
+
+    if (infile != NULL) {
+        // Read the last command number from the file
+        while (read_from_file(infile).commandNumber != 0) {
+            commandNumber++;
+        }
+        fclose(infile);
+    }
+
+    if (commandNumber > 20) {
         printf(
             "Error: Commands file at capacity, cannot add to file (do "
             "something with this?) \n");
         return;
     }
 
-    fprintf(outfile, "%d %s\n", commandNumber, commandName);
+    fprintf(infile, "%d %s\n", commandNumber, commandName);
     printf("Wrote struct num %d to file.\n", commandNumber);
 
-    fclose(outfile);
+    fclose(infile);
 }
