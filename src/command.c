@@ -33,7 +33,9 @@ void start_external(TokenList* token_list) {
             } else {
                 perror("ss: start_external: execvp");
             }
-            for (size_t i = 0; i < token_list->size; i++) { free(args[i]); }
+            for (size_t i = 0; i < token_list->size; i++) {
+                free(args[i]);
+            }
             free(args);
             exit(1);
         }

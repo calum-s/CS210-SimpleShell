@@ -57,8 +57,7 @@ int main(void) {
         bool force_continue = false;
 
         while (1) {
-            if (fgets(input + offset, (int) (input_size - offset), stdin) ==
-                NULL) {
+            if (fgets(input + offset, (int) (input_size - offset), stdin) == NULL) {
                 if (!feof(stdin)) {
                     // Happens on SIGINT which should cause line to be
                     // discarded.
@@ -79,7 +78,8 @@ int main(void) {
                 break;
             }
         }
-        if (force_continue) continue;
+        if (force_continue)
+            continue;
 
         TokenList tokens = tokenize(input);
         if (tokens.size == 0) {
