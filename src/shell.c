@@ -72,12 +72,30 @@ int main(void) {
 
             offset = strlen(input);
             if (input[offset - 1] != '\n' && !feof(stdin)) {
+#ifdef CONFORMANT
+                // Spec sheet requires max input of 512 bytes.
+                if (input_size >= 512) {
+                    fprintf(stderr, "ss: input too long\n");
+
+                    // Discard input until newline.
+                    while (fgets(input, (int) input_size, stdin) != NULL) {
+                        if (input[strlen(input) - 1] == '\n') {
+                            break;
+                        }
+                    }
+
+                    free(input);
+                    force_continue = true;
+                    break;
+                }
+#endif
                 input_size *= 2;
                 input = realloc(input, input_size);
             } else {
                 break;
             }
         }
+
         if (force_continue)
             continue;
 
