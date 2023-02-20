@@ -16,7 +16,7 @@ const char* BUILTINS[] = {"cd", "exit", "getpath", "setpath"};
 // Check if command is built-in
 Builtin is_builtin(Token token) {
     for (size_t i = 0; i < sizeof(BUILTINS) / sizeof(char*); i++) {
-        if (strncmp(token.start, BUILTINS[i], token.length) == 0) {
+        if (token.length == strlen(BUILTINS[i]) && strncmp(token.start, BUILTINS[i], token.length) == 0) {
             return (Builtin) i;
         }
     }
