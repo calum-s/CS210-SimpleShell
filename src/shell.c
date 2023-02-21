@@ -12,6 +12,7 @@
 
 #include "builtin.h"
 #include "command.h"
+#include "file.h"
 #include "token.h"
 
 int main(void) {
@@ -32,9 +33,16 @@ int main(void) {
 
     // TODO: Save the current path
 
-    // TODO: Load history
+    // TODO: Load history + aliases
 
-    // TODO: Load aliases
+    // creation of buffers for file names
+
+    char historyFile[100];
+    char aliasesFile[100];
+    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/history.txt");
+    snprintf(aliasesFile, 100, "%s%s", home, "/shellconfig/aliases.txt");
+    open_file(historyFile);
+    open_file(aliasesFile);
 
     while (1) {
         // Get current working path
@@ -107,6 +115,10 @@ int main(void) {
         }
 
         Builtin cmd;
+        write_to_file(historyFile,
+                      tokens.tokens[0].start); // here so that it remembers the command
+                                               // even if it is not builtin / valid
+
         if ((cmd = is_builtin(tokens.tokens[0])) != CMD_NONE) {
             execute_builtin(cmd, &tokens);
         } else {
