@@ -8,6 +8,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "builtin.h"
+#include "command.h"
+#include "file.h"
 #include "token.h"
 
 bool try_execute_builtin(TokenList* tokens, BuiltinState* state) {
@@ -15,7 +18,6 @@ bool try_execute_builtin(TokenList* tokens, BuiltinState* state) {
         if (strlen(BUILTIN_TABLE[i].name) == tokens->tokens[0].length &&
             strncmp(BUILTIN_TABLE[i].name, tokens->tokens[0].start, tokens->tokens[0].length) == 0) {
             // Is a builtin
-
             if (tokens->size > BUILTIN_TABLE[i].max_args || tokens->size < BUILTIN_TABLE[i].min_args) {
                 bool word = tokens->size > BUILTIN_TABLE[i].max_args;
                 fprintf(stderr,
@@ -145,5 +147,48 @@ void builtin_unalias(int argc, char** argv, BuiltinState* state) {
     (void) argc;
     if (!remove_alias(&state->aliases, argv[1])) {
         fprintf(stderr, "unalias: No such alias '%s'\n", argv[1]);
+    }
+}
+
+void builtin_history(int argc, char** argv, BuiltinState* state) {
+    (void) argc, (void) argv;
+    print_history();
+}
+
+void builtin_historyinvoke(int argc, char** argv, BuiltinState* state) {
+    (void) argc, (void) argv;
+    Command command;
+
+    long input;
+
+    if (argv[1] == NULL) {
+        input = last_command_number();
+    } else {
+        char* endptr;
+        long checkInput = strtol(argv[1], &endptr, 10);
+
+        if (errno == ERANGE || errno == EINVAL) {
+            fprintf(stderr, "history: Invalid input");
+            return;
+        } else if (checkInput < 0) {
+            input = last_command_number() + checkInput + 1;
+        } else if (checkInput < 1 || checkInput > last_command_number()) {
+            fprintf(stderr, "history: Invalid input");
+            return;
+        } else {
+            input = checkInput;
+        }
+    }
+
+    if (get_command(input, &command) == false) {
+        fprintf(stderr, "Error finding command");
+        return;
+    };
+
+    printf("\n%s\n", command.commandName);
+
+    TokenList tokens = tokenize(command.commandName);
+    if (!try_execute_builtin(&tokens, state)) {
+        start_external(&tokens);
     }
 }
