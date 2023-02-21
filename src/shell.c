@@ -43,7 +43,7 @@ int main(void) {
 
     char historyFile[100];
     char aliasesFile[100];
-    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/history.txt");
+    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/.hist_list");
     snprintf(aliasesFile, 100, "%s%s", home, "/shellconfig/aliases.txt");
     open_file(historyFile);
     open_file(aliasesFile);

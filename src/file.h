@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "token.h"
@@ -16,3 +17,6 @@ typedef struct Command Command;
 void open_file(const char* fileName);
 void write_to_file(const char* fileName, const char* commandName);
 Command read_from_file(FILE* fileName);
+bool get_command(int index, Command* command);
+
+int last_command_number();

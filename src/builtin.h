@@ -16,6 +16,9 @@ void builtin_getpath(int argc, char** argv, BuiltinState*);
 void builtin_setpath(int argc, char** argv, BuiltinState*);
 void builtin_alias(int argc, char** argv, BuiltinState*);
 void builtin_unalias(int argc, char** argv, BuiltinState*);
+void builtin_history(int argc, char** argv, BuiltinState*);
+void builtin_historyinvoke(int argc, char** argv, BuiltinState*);
+void builtin_historyinvokecount(int argc, char** argv, BuiltinState*);
 
 static const struct {
     char* name;
@@ -29,7 +32,11 @@ static const struct {
     {"setpath", 2, 2, &builtin_setpath},
     {"alias", 1, SIZE_MAX, &builtin_alias},
     {"unalias", 2, 2, &builtin_unalias},
+    {"history", 1, 1, &builtin_history},
+    {"!", 2, 2, &builtin_historyinvoke},
+    {"!!", 1, 1, &builtin_historyinvoke},
 };
 
 // Try to execute builtin, returning false if no such builtin was found.
 bool try_execute_builtin(TokenList* token, BuiltinState* state);
+void print_history();

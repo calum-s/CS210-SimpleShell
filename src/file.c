@@ -1,6 +1,7 @@
 #include "file.h"
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +26,65 @@ Command read_from_file(FILE* file) {
         command.commandNumber = 0;
         return command;
     }
+}
+
+void print_history() {
+    char* home = getenv("HOME");
+    char historyFile[100];
+
+    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/.hist_list");
+
+    FILE* file = fopen(historyFile, "r");
+
+    if (file == NULL) {                // check if the file is valid/exists
+        char* dirname = "shellconfig"; // set the directory name for first-time creation
+
+        if (mkdir(dirname, 0775) < 0 && errno != EEXIST) { // check if the directory was created
+            perror("mkdir");
+            return;
+        }
+        file = fopen(historyFile, "a");
+    }
+
+    Command allCommands;
+
+    while ((allCommands = read_from_file(file)).commandNumber != 0) {
+        printf("%d. %s\n", allCommands.commandNumber, allCommands.commandName);
+    }
+
+    fclose(file);
+}
+
+bool get_command(int index, Command* command) {
+    char* home = getenv("HOME");
+    char historyFile[100];
+
+    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/.hist_list");
+
+    FILE* file = fopen(historyFile, "r");
+
+    if (file == NULL) {
+        char* dirname = "shellconfig";
+
+        if (mkdir(dirname, 0775) < 0 && errno != EEXIST) {
+            perror("mkdir");
+            return false;
+        }
+        file = fopen(historyFile, "a");
+    }
+
+    Command allCommands;
+
+    while ((allCommands = read_from_file(file)).commandNumber != 0) {
+        if (allCommands.commandNumber == index) {
+            *command = allCommands;
+            fclose(file);
+            return true;
+        }
+    }
+
+    fclose(file);
+    return false;
 }
 
 void open_file(const char* fileName) {
@@ -71,6 +131,36 @@ void write_to_file(const char* fileName, const char* commandName) {
     }
 
     fprintf(infile, "%d %s\n", commandNumber, commandName);
-
     fclose(infile);
+}
+
+int last_command_number() {
+    char* home = getenv("HOME");
+    char historyFile[100];
+
+    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/.hist_list");
+
+    FILE* file = fopen(historyFile, "r");
+
+    if (file == NULL) {
+        char* dirname = "shellconfig";
+
+        if (mkdir(dirname, 0775) < 0 && errno != EEXIST) {
+            perror("mkdir");
+            return 0;
+        }
+        file = fopen(historyFile, "a");
+    }
+
+    Command command;
+
+    while ((command = read_from_file(file)).commandNumber != 0) {
+        if (command.commandNumber == 20) {
+            fclose(file);
+            return 20;
+        }
+    }
+
+    fclose(file);
+    return command.commandNumber;
 }

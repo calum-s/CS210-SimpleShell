@@ -22,6 +22,21 @@ TokenList tokenize(char* source) {
     char* current = source;
     char* start = source;
 
+    if (*current == '!') {
+        Token token;
+        token.start = current;
+        if (current[1] == '!') {
+            token.length = 2;
+            add_token(&list, token);
+            current += 2;
+            start = current;
+        } else {
+            token.length = 1;
+            add_token(&list, token);
+            start = ++current;
+        }
+    }
+
     while (*current != '\0') {
         if (is_delimeter(*current)) {
             if (current != start) {
