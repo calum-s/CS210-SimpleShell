@@ -15,6 +15,7 @@ void builtin_exit(int argc, char** argv, BuiltinState*);
 void builtin_getpath(int argc, char** argv, BuiltinState*);
 void builtin_setpath(int argc, char** argv, BuiltinState*);
 void builtin_alias(int argc, char** argv, BuiltinState*);
+void builtin_unalias(int argc, char** argv, BuiltinState*);
 
 static const struct {
     char* name;
