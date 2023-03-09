@@ -1,5 +1,5 @@
 
-sources:= src/token.c src/command.c src/builtin.c src/file.c
+sources:= src/token.c src/command.c src/builtin.c src/file.c src/alias.c
 
 all:
 	mkdir -p build
