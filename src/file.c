@@ -71,7 +71,6 @@ void write_to_file(const char* fileName, const char* commandName) {
         while (read_from_file(infile).commandNumber != 0) {
             commandNumber++;
         }
-        fclose(infile);
     }
 
     if (commandNumber > 20) {
