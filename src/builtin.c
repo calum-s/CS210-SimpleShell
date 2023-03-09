@@ -110,6 +110,17 @@ void builtin_alias(int argc, char** argv, BuiltinState* state) {
     char* key = malloc(strlen(argv[1]) + 1);
     strcpy(key, argv[1]);
 
+    TokenList* old_alias;
+    if ((old_alias = get_alias(&state->aliases, key))) {
+        fprintf(stderr, "alias: [warn] overwriting old alias for '%s': ", key);
+        for (size_t i = 0; i < old_alias->size; i++) {
+            fprintf(stderr, "%.*s ", (int) old_alias->tokens[i].length, old_alias->tokens[i].start);
+        }
+        fprintf(stderr, "\n");
+
+        remove_alias(&state->aliases, key);
+    }
+
     size_t buffer_capacity = 64;
     size_t buffer_size = 0;
     char* value = calloc(buffer_capacity, sizeof(char));
@@ -128,4 +139,11 @@ void builtin_alias(int argc, char** argv, BuiltinState* state) {
 
     value[buffer_size - 1] = '\0';
     add_alias(&state->aliases, key, tokenize(value));
+}
+
+void builtin_unalias(int argc, char** argv, BuiltinState* state) {
+    (void) argc;
+    if (!remove_alias(&state->aliases, argv[1])) {
+        fprintf(stderr, "unalias: No such alias '%s'\n", argv[1]);
+    }
 }
