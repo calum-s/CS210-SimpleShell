@@ -18,7 +18,7 @@ run:
 
 unsafe:
 	mkdir -p build
-	clang -g -Wall -Wextra -Wconversion ./src/shell.c -o build/shell
+	clang -g -Wall -Wextra -Wconversion ./src/shell.c $(sources) -o build/shell
 
 demo:
 	mkdir -p build
