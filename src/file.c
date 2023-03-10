@@ -46,41 +46,47 @@ void open_file(const char* fileName) {
         file = fopen(fileName, "a"); // creates file if it does not already exist
     }
 
-    Command allCommands;
-
-    while ((allCommands = read_from_file(file)).commandNumber != 0) {
-        printf("Read struct num %d from file.\n", allCommands.commandNumber);
-        printf("Name: %s\n", allCommands.commandName);
-    }
-
     fclose(file);
 }
 
-void write_to_file(const char* fileName, const char* commandName) {
-    FILE* infile = fopen(fileName, "r+");
-
-    if (infile == NULL) {
+void write_to_file(char* fileName, char* commandName) {
+    
+    FILE* file = fopen(fileName, "r+");
+    if (file == NULL) {
         printf("Error opening file\n");
         return;
     }
 
-    int commandNumber = 1;
+    // Read in all commands from the file
+    Command commands[MAX_NUM_COMMANDS];
+    int commandCount = 0;
+    Command command;
 
-    if (infile != NULL) {
-        // Read the last command number from the file
-        while (read_from_file(infile).commandNumber != 0) {
-            commandNumber++;
+    while ((command = read_from_file(file)).commandNumber != 0) {
+        commands[commandCount++] = command;
+    }
+
+    // Shift all commands up by one position if the maximum number of commands has been reached
+    if (commandCount == MAX_NUM_COMMANDS) {
+        for (int i = 1; i < MAX_NUM_COMMANDS; i++) {
+            commands[i - 1] = commands[i];
+            commands[i - 1].commandNumber--;
         }
+        commandCount--;
     }
 
-    if (commandNumber > 20) {
-        printf("Error: Commands file at capacity, cannot add to file (do "
-               "something with this?) \n");
-        return;
+    // Add the new command to the end of the list
+    Command newCommand;
+    strncpy(newCommand.commandName, commandName, MAX_COMMAND_NAME_LENGTH);
+    newCommand.commandNumber = commandCount + 1;
+    commands[commandCount++] = newCommand;
+
+    // Write all commands back to the file
+    fseek(file, 0, SEEK_SET);
+    for (int i = 0; i < commandCount; i++) {
+        Command command = commands[i];
+        fprintf(file, "%d %s\n", command.commandNumber, command.commandName);
     }
 
-    fprintf(infile, "%d %s\n", commandNumber, commandName);
-    printf("Wrote struct num %d to file.\n", commandNumber);
-
-    fclose(infile);
+    fclose(file);
 }
