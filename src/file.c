@@ -50,7 +50,7 @@ void open_file(const char* fileName) {
 }
 
 void write_to_file(char* fileName, char* commandName) {
-    
+
     FILE* file = fopen(fileName, "r+");
     if (file == NULL) {
         printf("Error opening file\n");
