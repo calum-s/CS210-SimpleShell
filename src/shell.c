@@ -44,6 +44,7 @@ int main(void) {
     snprintf(aliasesFile, 100, "%s%s", home, "/shellconfig/aliases.txt");
     open_file(historyFile);
     open_file(aliasesFile);
+    CircularBuffer bufferFile = init_buffer_from_file(historyFile);
 
     while (!state.exited) {
         // Get current working path
@@ -117,11 +118,12 @@ int main(void) {
             continue;
         }
 
-        write_to_file(historyFile, tokens.tokens[0].start);
-
         state.seen_names = make_alias_map();
 
         perform_alias_substitution(&state.aliases, &tokens, &state.seen_names);
+
+        write_to_circular_buffer(&bufferFile, tokens.tokens[0].start);
+        write_to_file(historyFile, &bufferFile);
 
         if (!try_execute_builtin(&tokens, &state)) {
             start_external(&tokens);
@@ -139,6 +141,7 @@ int main(void) {
     }
 
     // TODO: Save history
+    write_to_file(historyFile, &bufferFile); // here so that it remembers the command even if it is not builtin / valid
 
     save_alias_map(&state.aliases);
     for (size_t i = 0; i < state.aliases.capacity; i++) {
