@@ -49,44 +49,71 @@ void open_file(const char* fileName) {
     fclose(file);
 }
 
-void write_to_file(char* fileName, char* commandName) {
-
-    FILE* file = fopen(fileName, "r+");
+void write_to_file(const char* fileName, const CircularBuffer* buffer) {
+    FILE* file = fopen(fileName, "w");
     if (file == NULL) {
         printf("Error opening file\n");
         return;
     }
 
-    // Read in all commands from the file
-    Command commands[MAX_NUM_COMMANDS];
-    int commandCount = 0;
-    Command command;
-
-    while ((command = read_from_file(file)).commandNumber != 0) {
-        commands[commandCount++] = command;
-    }
-
-    // Shift all commands up by one position if the maximum number of commands has been reached
-    if (commandCount == MAX_NUM_COMMANDS) {
-        for (int i = 1; i < MAX_NUM_COMMANDS; i++) {
-            commands[i - 1] = commands[i];
-            commands[i - 1].commandNumber--;
-        }
-        commandCount--;
-    }
-
-    // Add the new command to the end of the list
-    Command newCommand;
-    strncpy(newCommand.commandName, commandName, MAX_COMMAND_NAME_LENGTH);
-    newCommand.commandNumber = commandCount + 1;
-    commands[commandCount++] = newCommand;
-
-    // Write all commands back to the file
-    fseek(file, 0, SEEK_SET);
-    for (int i = 0; i < commandCount; i++) {
-        Command command = commands[i];
+    for (int i = 0; i < buffer->count; i++) { // iterates over every command and writes it to the file
+        Command command = buffer->buffer[(buffer->start + i) % MAX_NUM_COMMANDS];
         fprintf(file, "%d %s\n", command.commandNumber, command.commandName);
     }
 
     fclose(file);
+}
+
+void write_to_circular_buffer(CircularBuffer* buffer, char* commandName) {
+    if (buffer->count == MAX_NUM_COMMANDS) { // checks if the buffer is full
+
+        for (int i = 1; i < MAX_NUM_COMMANDS; i++) { // if the buffer is full, shift the commands back one position
+            buffer->buffer[i - 1] = buffer->buffer[i];
+            buffer->buffer[i - 1].commandNumber--;
+        }
+        buffer->end--;
+        if (buffer->end < 0) {
+            buffer->end = MAX_NUM_COMMANDS - 1;
+        }
+        buffer->count--;
+    }
+
+    // Add the new element to the end of the buffer
+    Command newCommand;
+    snprintf(newCommand.commandName, MAX_COMMAND_NAME_LENGTH, "%s", commandName);
+    newCommand.commandNumber = buffer->count + 1;
+    buffer->buffer[buffer->end] = newCommand;
+    buffer->end = (buffer->end + 1) % MAX_NUM_COMMANDS;
+    buffer->count++;
+}
+
+CircularBuffer init_buffer_from_file(char* fileName) { // initializes the buffer from the file
+    FILE* file = fopen(fileName, "r");
+    if (file == NULL) {
+        perror("Error opening file\n");
+        return (CircularBuffer){0};
+    }
+
+    CircularBuffer buffer = {0};
+    Command command;
+
+    while (fscanf(file, "%d %s\n", &command.commandNumber, command.commandName) == 2) {
+        // Add the command to the circular buffer
+        if (buffer.count == MAX_NUM_COMMANDS) {
+            // If the buffer is full, overwrite the oldest element
+            buffer.start = (buffer.start + 1) % MAX_NUM_COMMANDS;
+            buffer.count--;
+        }
+        buffer.buffer[buffer.end] = command;
+        buffer.end = (buffer.end + 1) % MAX_NUM_COMMANDS;
+        buffer.count++;
+    }
+
+    fclose(file);
+
+    // for(int i = 0; i < MAX_NUM_COMMANDS; i++) {
+    //     printf("buffer[%d]: %d %s \n", i, buffer.buffer[i].commandNumber, buffer.buffer[i].commandName);
+    // }
+
+    return buffer;
 }
