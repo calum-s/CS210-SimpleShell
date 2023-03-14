@@ -46,13 +46,6 @@ void open_file(const char* fileName) {
         file = fopen(fileName, "a"); // creates file if it does not already exist
     }
 
-    Command allCommands;
-
-    while ((allCommands = read_from_file(file)).commandNumber != 0) {
-        printf("Read struct num %d from file.\n", allCommands.commandNumber);
-        printf("Name: %s\n", allCommands.commandName);
-    }
-
     fclose(file);
 }
 
@@ -74,13 +67,10 @@ void write_to_file(const char* fileName, const char* commandName) {
     }
 
     if (commandNumber > 20) {
-        printf("Error: Commands file at capacity, cannot add to file (do "
-               "something with this?) \n");
         return;
     }
 
     fprintf(infile, "%d %s\n", commandNumber, commandName);
-    printf("Wrote struct num %d to file.\n", commandNumber);
 
     fclose(infile);
 }
