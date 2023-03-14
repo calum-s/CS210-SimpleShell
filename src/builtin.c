@@ -67,7 +67,6 @@ void builtin_getpath(int argc, char** argv, __attribute__((unused)) BuiltinState
 }
 
 void builtin_setpath(int argc, char** argv, __attribute__((unused)) BuiltinState* state) {
-    malloc(1023);
     (void) argc;
     if (setenv("PATH", argv[1], 1) < 0) {
         perror("setpath");

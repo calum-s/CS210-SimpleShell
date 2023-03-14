@@ -7,7 +7,7 @@
 
 void test_tokenizer(void);
 
-int main() {
+int main(void) {
     printf("Running tests...\n");
 
     printf("Testing tokenizer...");
