@@ -117,11 +117,10 @@ int main(void) {
             free(input);
             continue;
         }
-        
+
         write_to_circular_buffer(&bufferFile, tokens.tokens[0].start);
-        write_to_file(historyFile, &bufferFile); // here so that it remembers the command
-                                                 // even if it is not builtin / valid
-        if (!try_execute_builtin(&tokens)) {
+        write_to_file(historyFile,
+                      &bufferFile); // here so that it remembers the command even if it is not builtin / valid
 
         char* token0 = malloc(tokens.tokens[0].length + 1);
         strncpy(token0, tokens.tokens[0].start, tokens.tokens[0].length);
@@ -134,7 +133,7 @@ int main(void) {
                 insert_token(&tokens, aliased->tokens[i], i);
             }
         }
-        
+
         free(token0);
 
         if (!try_execute_builtin(&tokens, &state)) {

@@ -45,7 +45,7 @@ void open_file(const char* fileName) {
 
         file = fopen(fileName, "a"); // creates file if it does not already exist
     }
-    
+
     fclose(file);
 }
 
@@ -93,7 +93,7 @@ CircularBuffer init_buffer_from_file(char* fileName) { // initializes the buffer
         perror("Error opening file\n");
         return (CircularBuffer){0};
     }
-    
+
     CircularBuffer buffer = {0};
     Command command;
 
