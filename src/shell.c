@@ -35,6 +35,10 @@ int main(void) {
 
     // TODO: Load history + aliases
 
+    BuiltinState state = {
+        .aliases = make_alias_map(),
+    };
+
     // creation of buffers for file names
 
     char historyFile[100];
@@ -113,11 +117,27 @@ int main(void) {
             free(input);
             continue;
         }
-
+        
         write_to_circular_buffer(&bufferFile, tokens.tokens[0].start);
         write_to_file(historyFile, &bufferFile); // here so that it remembers the command
                                                  // even if it is not builtin / valid
         if (!try_execute_builtin(&tokens)) {
+
+        char* token0 = malloc(tokens.tokens[0].length + 1);
+        strncpy(token0, tokens.tokens[0].start, tokens.tokens[0].length);
+        token0[tokens.tokens[0].length] = '\0';
+
+        TokenList* aliased;
+        if ((aliased = get_alias(&state.aliases, token0)) != NULL) {
+            remove_token(&tokens, 0);
+            for (size_t i = 0; i < aliased->size; i++) {
+                insert_token(&tokens, aliased->tokens[i], i);
+            }
+        }
+        
+        free(token0);
+
+        if (!try_execute_builtin(&tokens, &state)) {
             start_external(&tokens);
         }
 

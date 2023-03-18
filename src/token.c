@@ -1,5 +1,6 @@
 #include "token.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,6 +60,19 @@ void add_token(TokenList* list, Token token) {
     list->tokens[list->size++] = token;
 }
 
+void insert_token(TokenList* list, Token token, size_t index) {
+    assert(index <= list->size);
+    if (list->size == list->capacity) {
+        list->capacity = list->capacity == 0 ? 32 : list->capacity * 2;
+        list->tokens = realloc(list->tokens, list->capacity * sizeof(Token));
+    }
+    for (size_t i = list->size; i > index; i--) {
+        list->tokens[i] = list->tokens[i - 1];
+    }
+    list->tokens[index] = token;
+    list->size++;
+}
+
 void remove_token(TokenList* list, size_t index) {
     if (index >= list->size) {
         return;
@@ -69,7 +83,12 @@ void remove_token(TokenList* list, size_t index) {
     list->size--;
 }
 
-void free_token_list(TokenList* list) { free(list->tokens); }
+void free_token_list(TokenList* list) {
+    free(list->tokens);
+    list->size = 0;
+    list->capacity = 0;
+    list->tokens = NULL;
+}
 
 void print_token_list(TokenList* list) {
     printf("[");
