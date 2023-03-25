@@ -2,7 +2,6 @@
 // Authors: Kyle Pereria, Calum Scott, Karim Moukaouame, Max Hagan, Peter King
 // Date: 31/01/2023
 
-#include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -76,8 +75,11 @@ int main(void) {
                     printf("\n");
                     force_continue = true;
                     break;
+                } else {
+                    // Happens on EOF which should cause shell to exit.
+                    printf("\n");
+                    exit(0);
                 }
-                exit(0);
             }
 
             offset = strlen(input);
@@ -119,18 +121,7 @@ int main(void) {
 
         write_to_file(historyFile, tokens.tokens[0].start);
 
-        char* token0 = malloc(tokens.tokens[0].length + 1);
-        strncpy(token0, tokens.tokens[0].start, tokens.tokens[0].length);
-        token0[tokens.tokens[0].length] = '\0';
-
-        TokenList* aliased;
-        if ((aliased = get_alias(&state.aliases, token0)) != NULL) {
-            remove_token(&tokens, 0);
-            for (size_t i = 0; i < aliased->size; i++) {
-                insert_token(&tokens, aliased->tokens[i], i);
-            }
-        }
-        free(token0);
+        perform_alias_substitution(&state.aliases, &tokens);
 
         if (!try_execute_builtin(&tokens, &state)) {
             start_external(&tokens);

@@ -1,4 +1,6 @@
 #include "alias.h"
+#include "token.h"
+#include <stdio.h>
 #include <string.h>
 
 // fnv-1a hash function: https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
@@ -92,4 +94,44 @@ void free_alias_map(AliasMap* map) {
     map->size = 0;
     map->capacity = 0;
     map->buckets = NULL;
+}
+
+void perform_alias_substitution(AliasMap* map, TokenList* tokens) {
+    AliasMap seen_aliases = make_alias_map();
+    if (tokens->size > 0) {
+        bool substitution_success = true;
+        while (substitution_success) {
+            TokenList* aliased = NULL;
+            char* token0 = malloc(tokens->tokens[0].length + 1);
+            strncpy(token0, tokens->tokens[0].start, tokens->tokens[0].length);
+            token0[tokens->tokens[0].length] = '\0';
+            if ((aliased = get_alias(map, token0)) != NULL) {
+                if (get_alias(&seen_aliases, token0) != NULL) {
+                    fprintf(stderr, "alias: Circular alias detected: %s was already expanded.\n", token0);
+                    substitution_success = false;
+                    free(token0);
+                } else {
+                    remove_token(tokens, 0);
+                    for (size_t i = 0; i < aliased->size; i++) {
+                        insert_token(tokens, aliased->tokens[i], i);
+                    }
+                    // We're using the map as a hash set, so we don't care about the value.
+                    // NB: The empty TokenList does not allocate any memory, so we don't need to free it.
+                    TokenList empty = make_token_list();
+                    add_alias(&seen_aliases, token0, empty);
+                    substitution_success = true;
+                }
+            } else {
+                substitution_success = false;
+                free(token0);
+            }
+        }
+    }
+
+    for (size_t i = 0; i < seen_aliases.capacity; i++) {
+        if (seen_aliases.buckets[i].key != NULL) {
+            free(seen_aliases.buckets[i].key);
+        }
+    }
+    free_alias_map(&seen_aliases);
 }
