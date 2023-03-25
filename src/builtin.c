@@ -12,7 +12,8 @@
 
 bool try_execute_builtin(TokenList* tokens, BuiltinState* state) {
     for (size_t i = 0; i < sizeof(BUILTIN_TABLE) / sizeof(BUILTIN_TABLE[0]); i++) {
-        if (strncmp(BUILTIN_TABLE[i].name, tokens->tokens[0].start, tokens->tokens[0].length) == 0) {
+        if (strlen(BUILTIN_TABLE[i].name) == tokens->tokens[0].length &&
+            strncmp(BUILTIN_TABLE[i].name, tokens->tokens[0].start, tokens->tokens[0].length) == 0) {
             // Is a builtin
 
             if (tokens->size > BUILTIN_TABLE[i].max_args || tokens->size < BUILTIN_TABLE[i].min_args) {
