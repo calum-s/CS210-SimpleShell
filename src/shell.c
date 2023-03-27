@@ -1,5 +1,5 @@
 // Project: Simple Shell
-// Authors: Kyle Pereria, Calum Scott, Karim Moukaouame, Max Hagan, Peter King
+// Authors: Kyle Pereria, Calum Scott, Karim Moukaouame, Max Hagan
 // Date: 31/01/2023
 
 #include <errno.h>
@@ -151,6 +151,7 @@ int main(void) {
     // TODO: Save aliases
 
     // TODO: Restore original path
+    setenv("HOME", home, 1);
 
     return 0;
 }
