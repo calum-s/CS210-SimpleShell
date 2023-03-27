@@ -34,9 +34,7 @@ int main(void) {
 
     // TODO: Load history + aliases
 
-    BuiltinState state = {
-        .aliases = make_alias_map(),
-    };
+    BuiltinState state = {.aliases = make_alias_map(), .exited = false};
 
     // creation of buffers for file names
 
@@ -47,7 +45,7 @@ int main(void) {
     open_file(historyFile);
     open_file(aliasesFile);
 
-    while (1) {
+    while (!state.exited) {
         // Get current working path
         char cwd[256];
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
@@ -73,13 +71,13 @@ int main(void) {
                     // Happens on SIGINT which should cause line to be
                     // discarded.
                     printf("\n");
-                    force_continue = true;
-                    break;
                 } else {
                     // Happens on EOF which should cause shell to exit.
                     printf("\n");
-                    exit(0);
+                    state.exited = true;
                 }
+                force_continue = true;
+                break;
             }
 
             offset = strlen(input);
@@ -121,7 +119,9 @@ int main(void) {
 
         write_to_file(historyFile, tokens.tokens[0].start);
 
-        perform_alias_substitution(&state.aliases, &tokens);
+        state.seen_names = make_alias_map();
+
+        perform_alias_substitution(&state.aliases, &tokens, &state.seen_names);
 
         if (!try_execute_builtin(&tokens, &state)) {
             start_external(&tokens);

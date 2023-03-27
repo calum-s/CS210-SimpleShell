@@ -26,4 +26,4 @@ TokenList* get_alias(AliasMap* map, char* key);
 bool remove_alias(AliasMap* map, char* key);
 void free_alias_map(AliasMap* map);
 
-void perform_alias_substitution(AliasMap* map, TokenList* tokens);
+void perform_alias_substitution(AliasMap* map, TokenList* tokens, AliasMap* seen_names);

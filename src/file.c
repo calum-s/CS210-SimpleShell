@@ -28,7 +28,7 @@ Command read_from_file(FILE* file) {
     }
 }
 
-void print_history() {
+void print_history(void) {
     char* home = getenv("HOME");
     char historyFile[100];
 
@@ -134,7 +134,7 @@ void write_to_file(const char* fileName, const char* commandName) {
     fclose(infile);
 }
 
-int last_command_number() {
+int last_command_number(void) {
     char* home = getenv("HOME");
     char historyFile[100];
 
@@ -153,14 +153,12 @@ int last_command_number() {
     }
 
     Command command;
+    int commandNumber = 0;
 
     while ((command = read_from_file(file)).commandNumber != 0) {
-        if (command.commandNumber == 20) {
-            fclose(file);
-            return 20;
-        }
+        commandNumber = command.commandNumber;
     }
 
     fclose(file);
-    return command.commandNumber;
+    return commandNumber;
 }

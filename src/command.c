@@ -52,11 +52,6 @@ void start_external(TokenList* token_list) {
     }
 }
 
-void start_from_history(char* command) {
-    printf(command);
-    return;
-}
-
 void sigint(__attribute__((unused)) int _signum) {
     // Shells are not terminated by Ctrl+C
 }

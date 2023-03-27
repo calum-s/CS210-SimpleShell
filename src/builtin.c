@@ -2,12 +2,14 @@
 
 #include "builtin.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
+#include "alias.h"
 #include "builtin.h"
 #include "command.h"
 #include "file.h"
@@ -53,7 +55,8 @@ bool try_execute_builtin(TokenList* tokens, BuiltinState* state) {
     return false;
 }
 // Try to execute builtin, returning false if no such builtin was found.
-void builtin_cd(int argc, char** argv, __attribute__((unused)) BuiltinState* state) {
+void builtin_cd(int argc, char** argv, BuiltinState* state) {
+    (void) state;
     if (chdir(argc == 2 ? argv[1] : getenv("HOME")) < 0) {
         if (errno == ENOENT) {
             fprintf(stderr, "cd: Path '%s' does not exist.\n", argc == 2 ? argv[1] : getenv("HOME"));
@@ -63,22 +66,22 @@ void builtin_cd(int argc, char** argv, __attribute__((unused)) BuiltinState* sta
     };
 }
 
-void builtin_getpath(int argc, char** argv, __attribute__((unused)) BuiltinState* state) {
-    (void) argc, (void) argv;
+void builtin_getpath(int argc, char** argv, BuiltinState* state) {
+    (void) argc, (void) argv, (void) state;
     char* path = getenv("PATH");
     printf("%s\n", path);
 }
 
-void builtin_setpath(int argc, char** argv, __attribute__((unused)) BuiltinState* state) {
-    (void) argc;
+void builtin_setpath(int argc, char** argv, BuiltinState* state) {
+    (void) argc, (void) state;
     if (setenv("PATH", argv[1], 1) < 0) {
         perror("setpath");
     }
 }
 
-void builtin_exit(int argc, char** argv, __attribute__((unused)) BuiltinState* state) {
+void builtin_exit(int argc, char** argv, BuiltinState* state) {
     (void) argc, (void) argv;
-    exit(0);
+    state->exited = true;
 }
 
 void builtin_alias(int argc, char** argv, BuiltinState* state) {
@@ -141,6 +144,7 @@ void builtin_alias(int argc, char** argv, BuiltinState* state) {
 
     value[buffer_size - 1] = '\0';
     add_alias(&state->aliases, key, tokenize(value));
+    // FIXME: leaked value
 }
 
 void builtin_unalias(int argc, char** argv, BuiltinState* state) {
@@ -151,7 +155,7 @@ void builtin_unalias(int argc, char** argv, BuiltinState* state) {
 }
 
 void builtin_history(int argc, char** argv, BuiltinState* state) {
-    (void) argc, (void) argv;
+    (void) argc, (void) argv, (void) state;
     print_history();
 }
 
@@ -168,27 +172,51 @@ void builtin_historyinvoke(int argc, char** argv, BuiltinState* state) {
         long checkInput = strtol(argv[1], &endptr, 10);
 
         if (errno == ERANGE || errno == EINVAL) {
-            fprintf(stderr, "history: Invalid input");
+            perror("history");
+            return;
+        } else if (*endptr != '\0') {
+            fprintf(stderr, "history: Invalid input '%s'.\n", argv[1]);
             return;
         } else if (checkInput < 0) {
             input = last_command_number() + checkInput + 1;
-        } else if (checkInput < 1 || checkInput > last_command_number()) {
-            fprintf(stderr, "history: Invalid input");
+            if (input < 1) {
+                fprintf(stderr, "history: Input %ld not in range. \n", checkInput);
+                return;
+            }
+        }
+        if (checkInput == 0 || checkInput > last_command_number()) {
+            fprintf(stderr, "history: Input %ld not in range. \n", checkInput);
             return;
         } else {
             input = checkInput;
         }
     }
 
-    if (get_command(input, &command) == false) {
-        fprintf(stderr, "Error finding command");
+    if (get_command((int) input, &command) == false) {
+        fprintf(stderr, "history: Error finding command\n");
         return;
     };
 
-    printf("\n%s\n", command.commandName);
-
     TokenList tokens = tokenize(command.commandName);
+    assert(tokens.size > 0);
+
+    if (get_alias(&state->seen_names, tokens.tokens[0].start) != NULL) {
+        fprintf(stderr,
+                "history: [warn] Recursive history invocation detected, %s was already seen.\n",
+                tokens.tokens[0].start);
+        free_token_list(&tokens);
+        return;
+    } else {
+        char* name = strdup(tokens.tokens[0].start);
+        add_alias(&state->seen_names, name, make_token_list());
+    }
+
+    printf("%s\n", command.commandName);
+
+    perform_alias_substitution(&state->aliases, &tokens, &state->seen_names);
+
     if (!try_execute_builtin(&tokens, state)) {
         start_external(&tokens);
     }
+    free_token_list(&tokens);
 }
