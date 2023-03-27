@@ -67,15 +67,12 @@ void write_to_file(const char* fileName, const CircularBuffer* buffer) {
 void write_to_circular_buffer(CircularBuffer* buffer, char* commandName) {
     if (buffer->count == MAX_NUM_COMMANDS) { // checks if the buffer is full
 
-        for (int i = 1; i < MAX_NUM_COMMANDS; i++) { // if the buffer is full, shift the commands back one position
-            buffer->buffer[i - 1] = buffer->buffer[i];
-            buffer->buffer[i - 1].commandNumber--;
+        for (int i = 0; i < MAX_NUM_COMMANDS; i++) { // decrements the command number of every command in the buffer
+            buffer->buffer[i].commandNumber--;
         }
-        buffer->end--;
-        if (buffer->end < 0) {
-            buffer->end = MAX_NUM_COMMANDS - 1;
-        }
-        buffer->count--;
+
+        buffer->start = (buffer->start + 1) % MAX_NUM_COMMANDS; // removes the oldest element from the buffer
+        buffer->count--;                                        // decrements the count of the buffer
     }
 
     // Add the new element to the end of the buffer
@@ -98,22 +95,19 @@ CircularBuffer init_buffer_from_file(char* fileName) { // initializes the buffer
     Command command;
 
     while (fscanf(file, "%d %s\n", &command.commandNumber, command.commandName) == 2) {
-        // Add the command to the circular buffer
+
         if (buffer.count == MAX_NUM_COMMANDS) {
             // If the buffer is full, overwrite the oldest element
             buffer.start = (buffer.start + 1) % MAX_NUM_COMMANDS;
             buffer.count--;
         }
+
         buffer.buffer[buffer.end] = command;
         buffer.end = (buffer.end + 1) % MAX_NUM_COMMANDS;
         buffer.count++;
     }
 
     fclose(file);
-
-    // for(int i = 0; i < MAX_NUM_COMMANDS; i++) {
-    //     printf("buffer[%d]: %d %s \n", i, buffer.buffer[i].commandNumber, buffer.buffer[i].commandName);
-    // }
 
     return buffer;
 }

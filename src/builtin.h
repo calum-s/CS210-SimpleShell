@@ -8,6 +8,7 @@
 
 typedef struct BuiltinState {
     AliasMap aliases;
+    bool exited;
 } BuiltinState;
 
 void builtin_cd(int argc, char** argv, BuiltinState*);

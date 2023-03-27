@@ -49,7 +49,7 @@ int main(void) {
     open_file(aliasesFile);
     CircularBuffer bufferFile = init_buffer_from_file(historyFile);
 
-    while (1) {
+    while (!state.exited) {
         // Get current working path
         char cwd[256];
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
@@ -119,8 +119,6 @@ int main(void) {
         }
 
         write_to_circular_buffer(&bufferFile, tokens.tokens[0].start);
-        write_to_file(historyFile,
-                      &bufferFile); // here so that it remembers the command even if it is not builtin / valid
 
         char* token0 = malloc(tokens.tokens[0].length + 1);
         strncpy(token0, tokens.tokens[0].start, tokens.tokens[0].length);
@@ -151,6 +149,7 @@ int main(void) {
     }
 
     // TODO: Save history
+    write_to_file(historyFile, &bufferFile); // here so that it remembers the command even if it is not builtin / valid
 
     // TODO: Save aliases
 
