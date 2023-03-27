@@ -10,7 +10,6 @@
 #include <unistd.h>
 
 #include "alias.h"
-#include "builtin.h"
 #include "command.h"
 #include "file.h"
 #include "token.h"
@@ -63,7 +62,7 @@ void builtin_cd(int argc, char** argv, BuiltinState* state) {
         } else {
             perror("cd");
         }
-    };
+    }
 }
 
 void builtin_getpath(int argc, char** argv, BuiltinState* state) {
@@ -144,7 +143,7 @@ void builtin_alias(int argc, char** argv, BuiltinState* state) {
 
     value[buffer_size - 1] = '\0';
     add_alias(&state->aliases, key, tokenize(value));
-    // FIXME: leaked value
+    add_string(&state->allocations, value);
 }
 
 void builtin_unalias(int argc, char** argv, BuiltinState* state) {
@@ -156,48 +155,46 @@ void builtin_unalias(int argc, char** argv, BuiltinState* state) {
 
 void builtin_history(int argc, char** argv, BuiltinState* state) {
     (void) argc, (void) argv, (void) state;
-    print_history();
+    print_history(&state->history);
 }
 
 void builtin_historyinvoke(int argc, char** argv, BuiltinState* state) {
     (void) argc, (void) argv;
-    Command command;
 
     long input;
 
     if (argv[1] == NULL) {
-        input = last_command_number();
+        input = (long) state->history.count;
     } else {
-        char* endptr;
-        long checkInput = strtol(argv[1], &endptr, 10);
+        char* end_ptr;
+        long parsed = strtol(argv[1], &end_ptr, 10);
 
         if (errno == ERANGE || errno == EINVAL) {
             perror("history");
             return;
-        } else if (*endptr != '\0') {
+        } else if (*end_ptr != '\0') {
             fprintf(stderr, "history: Invalid input '%s'.\n", argv[1]);
             return;
-        } else if (checkInput < 0) {
-            input = last_command_number() + checkInput + 1;
-            if (input < 1) {
-                fprintf(stderr, "history: Input %ld not in range. \n", checkInput);
+        } else if (parsed < 0) {
+            input = (long) state->history.count + parsed + 1;
+            if (input < 0) {
+                fprintf(stderr, "history: Input %ld not in range. \n", parsed);
                 return;
             }
-        }
-        if (checkInput == 0 || checkInput > last_command_number()) {
-            fprintf(stderr, "history: Input %ld not in range. \n", checkInput);
+        } else if (parsed == 0 || parsed > (long) state->history.count) {
+            fprintf(stderr, "history: Input %ld not in range. \n", parsed);
             return;
         } else {
-            input = checkInput;
+            input = parsed;
         }
     }
 
-    if (get_command((int) input, &command) == false) {
+    Command* command;
+    if ((command = get_command(&state->history, (size_t) input - 1)) == NULL) {
         fprintf(stderr, "history: Error finding command\n");
         return;
-    };
-
-    TokenList tokens = tokenize(command.commandName);
+    }
+    TokenList tokens = tokenize(command->name);
     assert(tokens.size > 0);
 
     if (get_alias(&state->seen_names, tokens.tokens[0].start) != NULL) {
@@ -211,7 +208,7 @@ void builtin_historyinvoke(int argc, char** argv, BuiltinState* state) {
         add_alias(&state->seen_names, name, make_token_list());
     }
 
-    printf("%s\n", command.commandName);
+    printf("%s\n", command->name);
 
     perform_alias_substitution(&state->aliases, &tokens, &state->seen_names);
 

@@ -1,5 +1,5 @@
 // Project: Simple Shell
-// Authors: Kyle Pereria, Calum Scott, Karim Moukaouame, Max Hagan, Peter King
+// Authors: Kyle Pereria, Calum Scott, Karim Moukaouame, Max Hagan
 // Date: 31/01/2023
 
 #include <signal.h>
@@ -24,27 +24,31 @@ int main(void) {
     sigemptyset(&act.sa_mask);
     sigaction(SIGINT, &act, NULL);
 
-    // TODO: Find the user home directory from the environment
     char* home = getenv("HOME");
 
     // Set current working directory to home variable
     chdir(home);
 
-    // TODO: Save the current path
-
-    // TODO: Load history + aliases
-
-    BuiltinState state = {.aliases = make_alias_map(), .exited = false};
+    char* old_path = malloc(strlen(getenv("PATH")) + 1);
+    strcpy(old_path, getenv("PATH"));
 
     // creation of buffers for file names
 
-    char historyFile[100];
-    char aliasesFile[100];
-    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/.hist_list");
-    snprintf(aliasesFile, 100, "%s%s", home, "/shellconfig/aliases.txt");
-    open_file(historyFile);
-    open_file(aliasesFile);
-    CircularBuffer bufferFile = init_buffer_from_file(historyFile);
+    char history_file[100];
+    char aliases_file[100];
+    snprintf(history_file, 100, "%s%s", home, "/shellconfig/.hist_list");
+    snprintf(aliases_file, 100, "%s%s", home, "/shellconfig/.aliases");
+    open_file(history_file);
+    open_file(aliases_file);
+
+    StringList allocations = make_string_list();
+    BuiltinState state = {
+        .allocations = make_string_list(),
+        .aliases = load_alias_map(&allocations),
+        .exited = false,
+        .history = load_circular_buffer(history_file),
+    };
+    state.allocations = allocations;
 
     while (!state.exited) {
         // Get current working path
@@ -122,8 +126,11 @@ int main(void) {
 
         perform_alias_substitution(&state.aliases, &tokens, &state.seen_names);
 
-        write_to_circular_buffer(&bufferFile, tokens.tokens[0].start);
-        write_to_file(historyFile, &bufferFile);
+        // Strip trailing newline
+        input[strlen(input) - 1] = '\0';
+        if (*tokens.tokens[0].start != '!') {
+            add_to_circular_buffer(&state.history, input);
+        }
 
         if (!try_execute_builtin(&tokens, &state)) {
             start_external(&tokens);
@@ -140,8 +147,8 @@ int main(void) {
         free(input);
     }
 
-    // TODO: Save history
-    write_to_file(historyFile, &bufferFile); // here so that it remembers the command even if it is not builtin / valid
+    write_to_file(&state.history,
+                  history_file); // here so that it remembers the command even if it is not builtin / valid
 
     save_alias_map(&state.aliases);
     for (size_t i = 0; i < state.aliases.capacity; i++) {
@@ -151,8 +158,11 @@ int main(void) {
         }
     }
     free_alias_map(&state.aliases);
+    free_string_list(&state.allocations);
 
-    // TODO: Restore original path
+    setenv("PATH", old_path, 1);
+    printf("ss: Restored PATH to %s\n", old_path);
+    free(old_path);
 
     return 0;
 }

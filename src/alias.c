@@ -57,7 +57,6 @@ void add_alias(AliasMap* map, char* key, TokenList value) {
                 AliasBucket* bucket = find_bucket(&temp_map, map->buckets[i].key);
                 bucket->key = map->buckets[i].key;
                 bucket->value = map->buckets[i].value;
-                bucket->tombstone = false;
             }
         }
         free(map->buckets);
@@ -69,7 +68,6 @@ void add_alias(AliasMap* map, char* key, TokenList value) {
     }
     bucket->key = key;
     bucket->value = value;
-    bucket->tombstone = false;
 }
 
 TokenList* get_alias(AliasMap* map, char* key) {
@@ -83,10 +81,8 @@ bool remove_alias(AliasMap* map, char* key) {
         return false;
     }
     free(bucket->key);
-    free(bucket->value.tokens->start);
     free_token_list(&bucket->value);
     bucket->key = NULL;
-    bucket->tombstone = true;
     map->size--;
     return true;
 }
@@ -100,7 +96,7 @@ void free_alias_map(AliasMap* map) {
 
 void save_alias_map(AliasMap* map) {
     char file_path[256];
-    snprintf(file_path, 256, "%s/.alias", getenv("HOME"));
+    snprintf(file_path, 256, "%s/.aliases", getenv("HOME"));
 
     FILE* file = fopen(file_path, "w");
     if (file == NULL) {
@@ -121,15 +117,15 @@ void save_alias_map(AliasMap* map) {
     fclose(file);
 }
 
-AliasMap load_alias_map(void) {
+AliasMap load_alias_map(StringList* allocations) {
     AliasMap map = make_alias_map();
     char file_path[256];
-    snprintf(file_path, 256, "%s/.alias", getenv("HOME"));
+    snprintf(file_path, 256, "%s/.aliases", getenv("HOME"));
 
     FILE* file = fopen(file_path, "r");
     if (file == NULL) {
         if (errno == ENOENT) {
-            return make_alias_map();
+            return map;
         }
         perror("alias: failed to open alias file");
         return map;
@@ -147,11 +143,11 @@ AliasMap load_alias_map(void) {
 
             add_alias(&map, key, tokens);
         }
+        add_string(allocations, line);
         line = NULL;
     }
+    free(line);
 
-    // FIXME: Leaked line
-    // free(line);
     fclose(file);
     return map;
 }
@@ -187,3 +183,25 @@ void perform_alias_substitution(AliasMap* map, TokenList* tokens, AliasMap* seen
         }
     }
 }
+
+void add_string(StringList* list, char* string) {
+    if (list->size == list->capacity) {
+        list->capacity = list->capacity == 0 ? 32 : list->capacity * 2;
+        list->strings = realloc(list->strings, list->capacity * sizeof(char*));
+    }
+
+    list->strings[list->size++] = string;
+}
+
+void free_string_list(StringList* list) {
+    for (size_t i = 0; i < list->size; i++) {
+        free(list->strings[i]);
+    }
+    free(list->strings);
+
+    list->strings = NULL;
+    list->size = 0;
+    list->capacity = 0;
+}
+
+StringList make_string_list(void) { return (StringList){0}; }
