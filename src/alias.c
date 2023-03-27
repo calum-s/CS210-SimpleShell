@@ -1,7 +1,9 @@
-#include "alias.h"
-#include "token.h"
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "alias.h"
+#include "token.h"
 
 // fnv-1a hash function: https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 size_t hash(char* str) {
@@ -96,8 +98,7 @@ void free_alias_map(AliasMap* map) {
     map->buckets = NULL;
 }
 
-void perform_alias_substitution(AliasMap* map, TokenList* tokens) {
-    AliasMap seen_aliases = make_alias_map();
+void perform_alias_substitution(AliasMap* map, TokenList* tokens, AliasMap* seen_names) {
     if (tokens->size > 0) {
         bool substitution_success = true;
         while (substitution_success) {
@@ -106,7 +107,7 @@ void perform_alias_substitution(AliasMap* map, TokenList* tokens) {
             strncpy(token0, tokens->tokens[0].start, tokens->tokens[0].length);
             token0[tokens->tokens[0].length] = '\0';
             if ((aliased = get_alias(map, token0)) != NULL) {
-                if (get_alias(&seen_aliases, token0) != NULL) {
+                if (get_alias(seen_names, token0) != NULL) {
                     fprintf(stderr, "alias: Circular alias detected: %s was already expanded.\n", token0);
                     substitution_success = false;
                     free(token0);
@@ -118,7 +119,7 @@ void perform_alias_substitution(AliasMap* map, TokenList* tokens) {
                     // We're using the map as a hash set, so we don't care about the value.
                     // NB: The empty TokenList does not allocate any memory, so we don't need to free it.
                     TokenList empty = make_token_list();
-                    add_alias(&seen_aliases, token0, empty);
+                    add_alias(seen_names, token0, empty);
                     substitution_success = true;
                 }
             } else {
@@ -127,11 +128,4 @@ void perform_alias_substitution(AliasMap* map, TokenList* tokens) {
             }
         }
     }
-
-    for (size_t i = 0; i < seen_aliases.capacity; i++) {
-        if (seen_aliases.buckets[i].key != NULL) {
-            free(seen_aliases.buckets[i].key);
-        }
-    }
-    free_alias_map(&seen_aliases);
 }

@@ -19,4 +19,4 @@ void write_to_file(const char* fileName, const char* commandName);
 Command read_from_file(FILE* fileName);
 bool get_command(int index, Command* command);
 
-int last_command_number();
+int last_command_number(void);

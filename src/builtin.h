@@ -8,6 +8,8 @@
 
 typedef struct BuiltinState {
     AliasMap aliases;
+    AliasMap seen_names;
+    bool exited;
 } BuiltinState;
 
 void builtin_cd(int argc, char** argv, BuiltinState*);
@@ -39,4 +41,4 @@ static const struct {
 
 // Try to execute builtin, returning false if no such builtin was found.
 bool try_execute_builtin(TokenList* token, BuiltinState* state);
-void print_history();
+void print_history(void);
