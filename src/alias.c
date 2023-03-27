@@ -98,6 +98,64 @@ void free_alias_map(AliasMap* map) {
     map->buckets = NULL;
 }
 
+void save_alias_map(AliasMap* map) {
+    char file_path[256];
+    snprintf(file_path, 256, "%s/.alias", getenv("HOME"));
+
+    FILE* file = fopen(file_path, "w");
+    if (file == NULL) {
+        perror("alias: failed to open alias file");
+        return;
+    }
+
+    for (size_t i = 0; i < map->capacity; i++) {
+        if (map->buckets[i].key != NULL) {
+            fprintf(file, "%s ", map->buckets[i].key);
+            for (size_t j = 0; j < map->buckets[i].value.size; j++) {
+                fprintf(
+                    file, "%.*s ", (int) map->buckets[i].value.tokens[j].length, map->buckets[i].value.tokens[j].start);
+            }
+            fprintf(file, "\n");
+        }
+    }
+    fclose(file);
+}
+
+AliasMap load_alias_map(void) {
+    AliasMap map = make_alias_map();
+    char file_path[256];
+    snprintf(file_path, 256, "%s/.alias", getenv("HOME"));
+
+    FILE* file = fopen(file_path, "r");
+    if (file == NULL) {
+        if (errno == ENOENT) {
+            return make_alias_map();
+        }
+        perror("alias: failed to open alias file");
+        return map;
+    }
+
+    char* line = NULL;
+    size_t line_size = 0;
+    while (getline(&line, &line_size, file) != -1) {
+        TokenList tokens = tokenize(line);
+        if (tokens.size > 0) {
+            char* key = malloc(tokens.tokens[0].length + 1);
+            strncpy(key, tokens.tokens[0].start, tokens.tokens[0].length);
+            key[tokens.tokens[0].length] = '\0';
+            remove_token(&tokens, 0);
+
+            add_alias(&map, key, tokens);
+        }
+        line = NULL;
+    }
+
+    // FIXME: Leaked line
+    // free(line);
+    fclose(file);
+    return map;
+}
+
 void perform_alias_substitution(AliasMap* map, TokenList* tokens, AliasMap* seen_names) {
     if (tokens->size > 0) {
         bool substitution_success = true;
