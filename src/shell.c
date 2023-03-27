@@ -127,11 +127,12 @@ int main(void) {
             start_external(&tokens);
         }
 
-        // TODO: While the command is a history invocation or alias then replace
-        // it with the appropriate command from history or the aliased command
-        // respectively
-
-        // TODO: If command is built-in invoke appropriate function
+        for (size_t i = 0; i < state.seen_names.capacity; i++) {
+            if (state.seen_names.buckets[i].key != NULL) {
+                free(state.seen_names.buckets[i].key);
+            }
+        }
+        free_alias_map(&state.seen_names);
 
         free_token_list(&tokens);
         free(input);
@@ -139,7 +140,14 @@ int main(void) {
 
     // TODO: Save history
 
-    // TODO: Save aliases
+    save_alias_map(&state.aliases);
+    for (size_t i = 0; i < state.aliases.capacity; i++) {
+        if (state.aliases.buckets[i].key != NULL) {
+            free(state.aliases.buckets[i].key);
+            free_token_list(&state.aliases.buckets[i].value);
+        }
+    }
+    free_alias_map(&state.aliases);
 
     // TODO: Restore original path
 
