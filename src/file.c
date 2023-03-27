@@ -6,88 +6,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
-// TODO: Detect command history and store in struct in incremements of 1.
+bool read_from_file(FILE* file, Command* command) {
+    size_t cmd_num;
+    return fscanf(file, "%zu %[^\n]", &cmd_num, command->name) == 2;
+}
 
-// Commands are accessed in the format of the command !<number> where <number>
-// is the command number in the history. If the command number is not found, the
-// shell should print an error message and return to the prompt. for reading
-// from the file the program should iterate over the elements in the struct, and
-// return the string values (command itself) struct format is as follows: {int
-// commandNumber, char* command}
-
-Command read_from_file(FILE* file) {
-    Command command;
-    if (fscanf(file, "%d %[^\n]", &command.commandNumber, command.commandName) == 2) {
-        return command;
-    } else {
-        command.commandNumber = 0;
-        return command;
+void print_history(CircularBuffer* buffer) {
+    for (size_t i = 0; i < buffer->count; i++) {
+        Command* command = get_command(buffer, i);
+        printf("%zu %s\n", i + 1, command->name);
     }
 }
 
-void print_history(void) {
-    char* home = getenv("HOME");
-    char historyFile[100];
-
-    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/.hist_list");
-
-    FILE* file = fopen(historyFile, "r");
-
-    if (file == NULL) {                // check if the file is valid/exists
-        char* dirname = "shellconfig"; // set the directory name for first-time creation
-
-        if (mkdir(dirname, 0775) < 0 && errno != EEXIST) { // check if the directory was created
-            perror("mkdir");
-            return;
-        }
-        file = fopen(historyFile, "a");
+Command* get_command(CircularBuffer* buffer, size_t index) {
+    if (index >= buffer->count) {
+        return NULL;
     }
 
-    Command allCommands;
-
-    while ((allCommands = read_from_file(file)).commandNumber != 0) {
-        printf("%d. %s\n", allCommands.commandNumber, allCommands.commandName);
-    }
-
-    fclose(file);
+    return &buffer->buffer[(buffer->start + index) % MAX_NUM_COMMANDS];
 }
 
-bool get_command(int index, Command* command) {
-    char* home = getenv("HOME");
-    char historyFile[100];
-
-    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/.hist_list");
-
-    FILE* file = fopen(historyFile, "r");
-
-    if (file == NULL) {
-        char* dirname = "shellconfig";
-
-        if (mkdir(dirname, 0775) < 0 && errno != EEXIST) {
-            perror("mkdir");
-            return false;
-        }
-        file = fopen(historyFile, "a");
-    }
-
-    Command allCommands;
-
-    while ((allCommands = read_from_file(file)).commandNumber != 0) {
-        if (allCommands.commandNumber == index) {
-            *command = allCommands;
-            fclose(file);
-            return true;
-        }
-    }
-
-    fclose(file);
-    return false;
-}
-
-void open_file(const char* fileName) {
+void open_file(char* fileName) {
     FILE* file = fopen(fileName, "r");
 
     if (file == NULL) { // check if the file is valid/exists
@@ -109,72 +49,35 @@ void open_file(const char* fileName) {
     fclose(file);
 }
 
-void write_to_file(const char* fileName, const CircularBuffer* buffer) {
-    FILE* file = fopen(fileName, "w");
+void write_to_file(CircularBuffer* buffer, char* file_name) {
+    FILE* file = fopen(file_name, "w");
     if (file == NULL) {
         printf("Error opening file\n");
         return;
     }
 
-    for (int i = 0; i < buffer->count; i++) { // iterates over every command and writes it to the file
-        Command command = buffer->buffer[(buffer->start + i) % MAX_NUM_COMMANDS];
-        fprintf(file, "%d %s\n", command.commandNumber, command.commandName);
+    for (size_t i = 0; i < buffer->count; i++) { // iterates over every command and writes it to the file
+        Command* command = get_command((CircularBuffer*) buffer, i);
+        fprintf(file, "%zu %s\n", i + 1, command->name);
     }
 
     fclose(file);
 }
 
-int last_command_number(void) {
-    char* home = getenv("HOME");
-    char historyFile[100];
-
-    snprintf(historyFile, 100, "%s%s", home, "/shellconfig/.hist_list");
-
-    FILE* file = fopen(historyFile, "r");
-
-    if (file == NULL) {
-        char* dirname = "shellconfig";
-
-        if (mkdir(dirname, 0775) < 0 && errno != EEXIST) {
-            perror("mkdir");
-            return 0;
-        }
-        file = fopen(historyFile, "a");
-    }
-
-    Command command;
-    int commandNumber = 0;
-
-    while ((command = read_from_file(file)).commandNumber != 0) {
-        commandNumber = command.commandNumber;
-    }
-
-    fclose(file);
-    return commandNumber;
-}
-
-void write_to_circular_buffer(CircularBuffer* buffer, char* commandName) {
-    if (buffer->count == MAX_NUM_COMMANDS) { // checks if the buffer is full
-
-        for (int i = 0; i < MAX_NUM_COMMANDS; i++) { // decrements the command number of every command in the buffer
-            buffer->buffer[i].commandNumber--;
-        }
-
-        buffer->start = (buffer->start + 1) % MAX_NUM_COMMANDS; // removes the oldest element from the buffer
-        buffer->count--;                                        // decrements the count of the buffer
-    }
-
+void add_to_circular_buffer(CircularBuffer* buffer, char* command_name) {
     // Add the new element to the end of the buffer
-    Command newCommand;
-    snprintf(newCommand.commandName, MAX_COMMAND_NAME_LENGTH, "%s", commandName);
-    newCommand.commandNumber = buffer->count + 1;
-    buffer->buffer[buffer->end] = newCommand;
-    buffer->end = (buffer->end + 1) % MAX_NUM_COMMANDS;
-    buffer->count++;
+    Command new_command;
+    strncpy(new_command.name, command_name, MAX_COMMAND_NAME_LENGTH - 1);
+    buffer->buffer[(buffer->start + buffer->count) % MAX_NUM_COMMANDS] = new_command;
+    if (buffer->count == MAX_NUM_COMMANDS) {
+        buffer->start = (buffer->start + 1) % MAX_NUM_COMMANDS;
+    } else {
+        buffer->count++;
+    }
 }
 
-CircularBuffer init_buffer_from_file(char* fileName) { // initializes the buffer from the file
-    FILE* file = fopen(fileName, "r");
+CircularBuffer load_circular_buffer(char* file_name) { // initializes the buffer from the file
+    FILE* file = fopen(file_name, "r");
     if (file == NULL) {
         perror("Error opening file\n");
         return (CircularBuffer){0};
@@ -183,17 +86,8 @@ CircularBuffer init_buffer_from_file(char* fileName) { // initializes the buffer
     CircularBuffer buffer = {0};
     Command command;
 
-    while (fscanf(file, "%d %s\n", &command.commandNumber, command.commandName) == 2) {
-
-        if (buffer.count == MAX_NUM_COMMANDS) {
-            // If the buffer is full, overwrite the oldest element
-            buffer.start = (buffer.start + 1) % MAX_NUM_COMMANDS;
-            buffer.count--;
-        }
-
-        buffer.buffer[buffer.end] = command;
-        buffer.end = (buffer.end + 1) % MAX_NUM_COMMANDS;
-        buffer.count++;
+    while (read_from_file(file, &command)) {
+        add_to_circular_buffer(&buffer, command.name);
     }
 
     fclose(file);

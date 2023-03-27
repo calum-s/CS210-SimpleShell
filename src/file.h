@@ -9,25 +9,22 @@
 #define MAX_NUM_COMMANDS 20
 
 struct Command {
-    char commandName[MAX_COMMAND_NAME_LENGTH];
-    int commandNumber;
+    char name[MAX_COMMAND_NAME_LENGTH];
 };
+typedef struct Command Command;
 
 struct CircularBuffer {
-    struct Command buffer[MAX_NUM_COMMANDS];
-    int start;
-    int end;
-    int count;
+    Command buffer[MAX_NUM_COMMANDS];
+    size_t start;
+    size_t count;
 };
-
-typedef struct Command Command;
 typedef struct CircularBuffer CircularBuffer;
 
-void open_file(const char* fileName);
-bool get_command(int index, Command* command);
+void open_file(char* fileName);
+Command* get_command(CircularBuffer* buffer, size_t command_number);
+void add_to_circular_buffer(CircularBuffer* buffer, char* command_name);
+CircularBuffer load_circular_buffer(char* file_name);
 
-int last_command_number(void);
-void write_to_file(const char* fileName, const CircularBuffer* buffer);
-Command read_from_file(FILE* fileName);
-CircularBuffer init_buffer_from_file(char* fileName);
-void write_to_circular_buffer(CircularBuffer* buffer, char* commandName);
+bool read_from_file(FILE* file, Command* command);
+void write_to_file(CircularBuffer* buffer, char* file_name);
+void print_history(CircularBuffer* buffer);
