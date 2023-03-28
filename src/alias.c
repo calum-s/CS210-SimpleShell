@@ -96,7 +96,7 @@ void free_alias_map(AliasMap* map) {
 
 void save_alias_map(AliasMap* map) {
     char file_path[256];
-    snprintf(file_path, 256, "%s/.aliases", getenv("HOME"));
+    snprintf(file_path, 256, "%s/shellconfig/.aliases", getenv("HOME"));
 
     FILE* file = fopen(file_path, "w");
     if (file == NULL) {
@@ -120,7 +120,7 @@ void save_alias_map(AliasMap* map) {
 AliasMap load_alias_map(StringList* allocations) {
     AliasMap map = make_alias_map();
     char file_path[256];
-    snprintf(file_path, 256, "%s/.aliases", getenv("HOME"));
+    snprintf(file_path, 256, "%s/shellconfig/.aliases", getenv("HOME"));
 
     FILE* file = fopen(file_path, "r");
     if (file == NULL) {
@@ -140,6 +140,15 @@ AliasMap load_alias_map(StringList* allocations) {
             strncpy(key, tokens.tokens[0].start, tokens.tokens[0].length);
             key[tokens.tokens[0].length] = '\0';
             remove_token(&tokens, 0);
+
+            if (tokens.size == 0) {
+                fprintf(stderr, "alias: Corrupted alias file. Aborting early.\n");
+                free(line);
+                free(key);
+                free_token_list(&tokens);
+                fclose(file);
+                return map;
+            }
 
             add_alias(&map, key, tokens);
         }
