@@ -177,7 +177,7 @@ void builtin_historyinvoke(int argc, char** argv, BuiltinState* state) {
             return;
         } else if (parsed < 0) {
             input = (long) state->history.count + parsed + 1;
-            if (input < 0) {
+            if (input <= 0) {
                 fprintf(stderr, "history: Input %ld not in range. \n", parsed);
                 return;
             }
